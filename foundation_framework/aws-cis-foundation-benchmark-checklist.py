@@ -105,7 +105,7 @@ def control_1_1_root_use(credreport):
         if credreport[0]['password_last_used'] == "N/A":
             pass
         else:
-            print "Something went wrong"
+            print("Something went wrong")
 
     try:
         key1Delta = (datetime.strptime(now, frm) 
@@ -118,7 +118,7 @@ def control_1_1_root_use(credreport):
         if credreport[0]['access_key_1_last_used_date'] == "N/A":
             pass
         else:
-            print "Something went wrong"
+            print("Something went wrong")
     try:
         key2Delta = datetime.strptime(now, frm) - datetime.strptime(credreport[0]['access_key_2_last_used_date'], frm)
         if (key2Delta.days == CONTROL_1_1_DAYS) & (key2Delta.seconds > 0): # Used within last 24h
@@ -128,7 +128,7 @@ def control_1_1_root_use(credreport):
         if credreport[0]['access_key_2_last_used_date'] == "N/A":
             pass
         else:
-            print "Something went wrong"
+            print("Something went wrong")
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
 
 
@@ -2016,7 +2016,7 @@ def lambda_handler(event, context):
         try:
             invokingEvent = json.loads(event['invokingEvent'])
         except:
-            print str(sys.exc_info()[0])
+            print(str(sys.exc_info()[0]))
             invokingEvent = event['invokingEvent']
 
     # Globally used resources
@@ -2095,7 +2095,7 @@ def lambda_handler(event, context):
 
 
     if SCRIPT_OUTPUT_JSON:
-        print json.dumps(controls, sort_keys=True, indent=4, separators=(',', ': '))
+        print(json.dumps(controls, sort_keys=True, indent=4, separators=(',', ': ')))
 
 
     if S3_WEB_REPORT:
@@ -2105,7 +2105,7 @@ def lambda_handler(event, context):
             for n, _ in enumerate(htmlReport):
                 htmlReport[n] = re.sub(r"\d{12}", "111111111111", htmlReport[n])
         signedURL = s3report(htmlReport)
-        print signedURL
+        print(signedURL)
 
 
     if CONFIG_RULE:
