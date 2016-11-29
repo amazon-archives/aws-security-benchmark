@@ -35,15 +35,11 @@ AWS_CIS_BENCHMARK_VERSION = "1.1"
 # Control 1.1 - Days allowed since use of root account.
 CONTROL_1_1_DAYS = 0
 
-# Control 1.18 - IAM manager and master role names.
+# Control 1.18 - IAM manager and master role names <Not implemented yet>
 IAM_MASTER = "iam_master"
 IAM_MANAGER = "iam_manager"
 IAM_MASTER_POLICY = "iam_master_policy"
 IAM_MANAGER_POLICY = "iam_manager_policy"
-
-
-# Set to true to enable config rule reporting.
-CONFIG_RULE = False
 
 # Would you like a HTML file generated with the result?
 # This file will be delivered using a signed URL.
@@ -1870,7 +1866,7 @@ def get_cloudtrails(regions):
     return trails
 
 
-def set_evaluation(event, annotation):
+def set_evaluation(invokeEvent, mainEvent, annotation):
     """Summary
 
     Args:
@@ -1886,25 +1882,25 @@ def set_evaluation(event, annotation):
             Evaluations=[
                 {
                     'ComplianceResourceType': 'AWS::::Account',
-                    'ComplianceResourceId': event['accountId'],
+                    'ComplianceResourceId': mainEvent['accountId'],
                     'ComplianceType': 'NON_COMPLIANT',
                     'Annotation': 'Failed controls: ' + str(annotation),
-                    'OrderingTimestamp': event['notificationCreationTime']
+                    'OrderingTimestamp': invokeEvent['notificationCreationTime']
                 },
             ],
-            ResultToken=event['resultToken']
+            ResultToken=mainEvent['resultToken']
             )
     else:
         configClient.put_evaluations(
             Evaluations=[
                 {
                     'ComplianceResourceType': 'AWS::::Account',
-                    'ComplianceResourceId': event['accountId'],
+                    'ComplianceResourceId': mainEvent['accountId'],
                     'ComplianceType': 'COMPLIANT',
-                    'OrderingTimestamp': event['notificationCreationTime']
+                    'OrderingTimestamp': invokeEvent['notificationCreationTime']
                 },
             ],
-            ResultToken=event['resultToken']
+            ResultToken=mainEvent['resultToken']
             )
 
 
@@ -2011,13 +2007,14 @@ def lambda_handler(event, context):
     # failReason : String - Failure description
     # scored : Boolean - True/False
 
-    if CONFIG_RULE:
-        # Verify correct format of event
-        try:
+    # Check if config rule
+    try:
+        if event['configRuleId']:
+            configRule = True
+            # Verify correct format of event
             invokingEvent = json.loads(event['invokingEvent'])
-        except:
-            print(str(sys.exc_info()[0]))
-            invokingEvent = event['invokingEvent']
+    except:
+        configRule = False
 
     # Globally used resources
     region_list = get_regions()
@@ -2095,7 +2092,11 @@ def lambda_handler(event, context):
 
 
     if SCRIPT_OUTPUT_JSON:
+        print("JSON output:")
+        print("-------------------------------------------------------")
         print(json.dumps(controls, sort_keys=True, indent=4, separators=(',', ': ')))
+        print("-------------------------------------------------------")
+        print("")
 
 
     if S3_WEB_REPORT:
@@ -2105,12 +2106,12 @@ def lambda_handler(event, context):
             for n, _ in enumerate(htmlReport):
                 htmlReport[n] = re.sub(r"\d{12}", "111111111111", htmlReport[n])
         signedURL = s3report(htmlReport)
-        print(signedURL)
+        print("SignedURL: "+signedURL)
 
 
-    if CONFIG_RULE:
+    if configRule:
         evalAnnotation = shortAnnotation(controls)
-        set_evaluation(invokingEvent, evalAnnotation)
+        set_evaluation(invokingEvent, event, evalAnnotation)
 
 if __name__ == '__main__':
     lambda_handler("test", "test")
