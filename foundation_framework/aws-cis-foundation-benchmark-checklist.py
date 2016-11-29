@@ -16,6 +16,7 @@ Attributes:
 ### TODO:
 ### Paginators where needed
 
+from __future__ import print_function
 import json
 import csv
 import time
