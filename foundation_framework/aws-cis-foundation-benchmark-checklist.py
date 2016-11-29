@@ -2,7 +2,6 @@
 
 Attributes:
     AWS_CIS_BENCHMARK_VERSION (str): Description
-    CLOUDTRAIL_CLIENT (TYPE): Description
     CONFIG_RULE (bool): Description
     CONTROL_1_1_DAYS (int): Description
     IAM_CLIENT (TYPE): Description
@@ -60,7 +59,6 @@ S3_WEB_REPORT_OBFUSCATE_ACCOUNT = True
 SCRIPT_OUTPUT_JSON = True
 
 
-CLOUDTRAIL_CLIENT = boto3.client('cloudtrail')
 IAM_CLIENT = boto3.client('iam')
 S3_CLIENT = boto3.client('s3')
 EC2_CLIENT = boto3.client('ec2')
