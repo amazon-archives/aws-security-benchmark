@@ -123,11 +123,12 @@
       Condition: ShouldEnableConfig
       DependsOn: S3BucketForGovernance
       Properties: 
+        RoleName: ConfigRole
         AssumeRolePolicyDocument: 
           Version: "2012-10-17"
           Statement: 
             - 
-              Effect: "Allow"
+              Effect: Allow
               Principal: 
                 Service: 
                   - "config.amazonaws.com"
@@ -144,21 +145,21 @@
               Version: "2012-10-17"
               Statement: 
                 - 
-                  Effect: "Allow"
+                  Effect: Allow
                   Action: "config:Put*"
                   Resource: "*"
                 - 
-                  Effect: "Allow"
+                  Effect: Allow
                   Action: "iam:GetPasswordPolicy"
                   Resource: "*"
                 - 
-                  Effect: "Allow"
+                  Effect: Allow
                   Action: "s3:GetBucketAcl"
                   Resource: 
                     !Sub |-
                       arn:aws:s3:::${S3BucketForGovernance}:/AWSLogs/*
                 - 
-                  Effect: "Allow"
+                  Effect: Allow
                   Action: "s3:PutObject"
                   Resource:
                     !Sub |-
@@ -169,11 +170,12 @@
       Condition: ShouldEnableConfig
       DependsOn: RoleForConfigRecorder
       Properties: 
+        RoleName: ConfigRecorder
         AssumeRolePolicyDocument: 
           Version: "2012-10-17"
           Statement: 
             - 
-              Effect: "Allow"
+              Effect: Allow
               Principal: 
                 Service: 
                   - "lambda.amazonaws.com"
@@ -189,11 +191,11 @@
               Version: "2012-10-17"
               Statement: 
                 - 
-                  Effect: "Allow"
+                  Effect: Allow
                   Action: "iam:PassRole"
                   Resource: !GetAtt RoleForConfigRecorder.Arn
                 - 
-                  Effect: "Allow"
+                  Effect: Allow
                   Action:
                     - "config:DeleteDeliveryChannel"
                     - "config:DescribeConfigurationRecorders"
@@ -211,15 +213,9 @@
         - RoleForConfigRecorder
         - RoleForFunctionToConfigureRecorder
       Properties: 
+        FunctionName: ConfigureConfigRecorder
         Code:
           ZipFile: |
-            #
-            # This file made available under CC0 1.0 Universal (https://creativecommons.org/publicdomain/zero/1.0/legalcode)
-            #
-            # This function determines whether an existing configuration recorder exists in this region. If it does,
-            # it then determines whether a delivery channel exists. If so, it stops the recorder and deletes the
-            # delivery channel. When the new Config resource is created, it will use the name of the existing 
-            # configuration recorder.
 
             import boto3
             import json
@@ -320,6 +316,7 @@
       Type: "AWS::SNS::Topic"
       Condition: ShouldEnableConfig
       Properties: 
+        TopicName: ConfigDeliveryNotifications
         Subscription: 
           - 
             Endpoint: !Ref NotificationEmailAddressForConfig
@@ -335,9 +332,9 @@
           Version: "2008-10-17"
           Statement: 
             - 
-              Effect: "Allow"
+              Effect: Allow
               Principal: 
-                Service: "config.amazonaws.com"
+                Service: config.amazonaws.com
               Resource: "*"
               Action: "SNS:Publish"
             
@@ -346,16 +343,18 @@
       Condition: ShouldEnableConfig
       DependsOn: ConfigConfigurationRecorder
       Properties: 
+        ConfigRuleName: CloudTrailMustBeEnabled
         Description: "Checks whether AWS CloudTrail is enabled in your AWS account. Optionally, you can specify which S3 bucket, SNS topic, and Amazon CloudWatch Logs ARN to use."
         Source: 
-          Owner: "AWS"
-          SourceIdentifier: "CLOUD_TRAIL_ENABLED"
+          Owner: AWS
+          SourceIdentifier: CLOUD_TRAIL_ENABLED
 
     ConfigRuleForIamPasswordPolicy: 
       Type: "AWS::Config::ConfigRule"
       Condition: ShouldEnableConfig
       DependsOn: ConfigConfigurationRecorder
       Properties: 
+        ConfigRuleName: IamPasswordPolicyMustMeetRequirements
         Description: "Checks whether the account password policy for IAM users meets the specified requirements."
         Scope: 
           ComplianceResourceTypes: 
@@ -377,6 +376,7 @@
       Condition: ShouldEnableConfig
       DependsOn: ConfigConfigurationRecorder
       Properties: 
+        ConfigRuleName: RootAccoutMustHaveMfaEnabled
         Description: "Checks whether the root user of your AWS account requires multi-factor authentication for console sign-in."
         Source: 
           Owner: "AWS"
@@ -387,6 +387,7 @@
       Condition: ShouldEnableConfig
       DependsOn: ConfigConfigurationRecorder
       Properties: 
+        ConfigRuleName: ResourcesMustBeTagged
         Description: "Checks whether your resources have the tags that you specify. For example, you can check whether your EC2 instances have the 'CostCenter' tag. Separate multiple values with commas."
         Scope: 
           ComplianceResourceTypes: 
@@ -419,6 +420,7 @@
       Condition: ShouldEnableConfig
       DependsOn: ConfigConfigurationRecorder
       Properties: 
+        ConfigRuleName: VolumesMustBeEncrypted
         Description: "Checks whether EBS volumes that are in an attached state are encrypted. Optionally, you can specify the ID of a KMS key to use to encrypt the volume."
         Scope: 
           ComplianceResourceTypes: 
@@ -432,6 +434,7 @@
       Condition: ShouldEnableConfig
       DependsOn: ConfigConfigurationRecorder
       Properties: 
+        ConfigRuleName: SecurityGroupsMustRestrictSshTraffic
         Description: "Checks whether security groups that are in use disallow unrestricted incoming SSH traffic."
         Scope: 
           ComplianceResourceTypes: 
@@ -441,10 +444,12 @@
           SourceIdentifier: "INCOMING_SSH_DISABLED"
 
     ConfigRuleForUnrestrictedPorts: 
+    ConfigRuleForUnrestrictedPorts: 
       Type: "AWS::Config::ConfigRule"
       Condition: ShouldEnableConfig
       DependsOn: ConfigConfigurationRecorder
       Properties: 
+        ConfigRuleName: SecurityGroupsMustDisallowTcpTraffic
         Description: "Checks whether security groups that are in use disallow unrestricted incoming TCP traffic to the specified ports."
         InputParameters: 
           blockedPort1: "20"
@@ -467,7 +472,7 @@
           Version: "2012-10-17"
           Statement: 
             - 
-              Effect: "Allow"
+              Effect: Allow
               Principal: 
                 Service: 
                   - "lambda.amazonaws.com"
@@ -484,18 +489,9 @@
       Condition: ShouldEnableConfig
       DependsOn: RoleForVpcFlowLogConfigRuleFunction
       Properties: 
+        FunctionName: EvaluateVpcFlowLogs
         Code:
           ZipFile: |
-            #
-            # This file made available under CC0 1.0 Universal (https://creativecommons.org/publicdomain/zero/1.0/legalcode)
-            #
-            # Ensure VPC Flow Logs is enabled.
-            # Description: Checks that VPC Flow Logs is enabled at specific VPC
-            #
-            # Trigger Type: Change Triggered
-            # Scope of Changes: EC2:VPC
-            # Required Resource Identifier: VPC ID
-            # Example Value: vpc-xxxxxxxx
 
             import boto3
             import json
@@ -564,17 +560,18 @@
     ConfigRuleForVpcFlowLogs: 
       Type: "AWS::Config::ConfigRule"
       Condition: ShouldEnableConfig
-      DependsOn: ConfigConfigurationRecorder
       DependsOn: 
+        - ConfigConfigurationRecorder
         - FunctionForVpcFlowLogRule
         - ConfigPermissionToCallVpcFlowLogLambda
       Properties: 
+        ConfigRuleName: VpcsMustHaveFlowLogs
         Description: "Checks whether VPC Flow Logs are enabled."
         Scope: 
           ComplianceResourceTypes: 
             - "AWS::EC2::VPC"
         Source: 
-          Owner: "CUSTOM_LAMBDA"
+          Owner: CUSTOM_LAMBDA
           SourceDetails: 
             - 
               EventSource: "aws.config"
@@ -585,14 +582,15 @@
       Type: "AWS::IAM::Role"
       Condition: ShouldEnableConfig
       Properties: 
+        RoleName: MfaUsageLambdaExecutionRole
         AssumeRolePolicyDocument: 
           Version: "2012-10-17"
           Statement: 
             - 
-              Effect: "Allow"
+              Effect: Allow
               Principal: 
                 Service: 
-                  - "lambda.amazonaws.com"
+                  - lambda.amazonaws.com  
               Action: 
                 - "sts:AssumeRole"
         Path: "/"
@@ -606,6 +604,7 @@
       Condition: ShouldEnableConfig
       DependsOn: RoleForVpcFlowLogConfigRuleFunction
       Properties: 
+        FunctionName: EvaluateUserMfaUsage
         Code:
           ZipFile: |
 
@@ -679,12 +678,13 @@
       Condition: ShouldEnableConfig
       DependsOn: ConfigPermissionToCallMfaForUsersLambda
       Properties: 
+        ConfigRuleName: UsersMustHaveMfaEnabled
         Description: "Checks whether MFA is enabled on users."
         Scope: 
           ComplianceResourceTypes: 
             - "AWS::IAM::User"
         Source: 
-          Owner: "CUSTOM_LAMBDA"
+          Owner: CUSTOM_LAMBDA
           SourceDetails: 
             - 
               EventSource: "aws.config"
@@ -695,11 +695,12 @@
       Type: "AWS::IAM::Role"
       Condition: ShouldEnableConfig
       Properties: 
+        RoleName: AuditPolicyPermissionsRole
         AssumeRolePolicyDocument: 
           Version: "2012-10-17"
           Statement: 
             - 
-              Effect: "Allow"
+              Effect: Allow
               Principal: 
                 Service: 
                   - "lambda.amazonaws.com"
@@ -715,7 +716,7 @@
               Version: "2012-10-17"
               Statement: 
                 - 
-                  Effect: "Allow"
+                  Effect: Allow
                   Action: 
                     - "config:PutEvaluations"
                     - "iam:GetPolicy"
@@ -727,8 +728,10 @@
       Condition: ShouldEnableConfig
       DependsOn: RoleForAuditPolicyPermissionsConfigRuleFunction
       Properties: 
+        FunctionName: AuditPolicyPermissions
         Code:
           ZipFile: |
+
             #==================================================================================================
             # Function: audit-policy-permissions
             # Purpose:  Config Rule to audit overly permissive policies
@@ -774,7 +777,7 @@
                    Evaluations=[
                        {
                            'ComplianceResourceType': invoking_event['configurationItem']['resourceType'],
-                           'ComplianceResourceId': policy_arn,
+                           'ComplianceResourceId': invoking_event['configurationItem']['resourceId'],
                            'ComplianceType': compliance_value,
                            'OrderingTimestamp': invoking_event['configurationItem']['configurationItemCaptureTime']
                        },
@@ -797,20 +800,21 @@
         Action: "lambda:InvokeFunction"
         Principal: "config.amazonaws.com"
 
-    ConfigRuleForAuditPolicyPermissionss: 
+    ConfigRuleForAuditPolicyPermissions: 
       Type: "AWS::Config::ConfigRule"
       Condition: ShouldEnableConfig
-      DependsOn: ConfigConfigurationRecorder
       DependsOn: 
+        - ConfigConfigurationRecorder
         - FunctionForAuditPolicyPermissionsRule
         - ConfigPermissionToCallAuditPolicyPermissionsLambda
       Properties: 
+        ConfigRuleName: IamPoliciesMustNotContainStarStar
         Description: "Evaluates whether IAM policies contain *.* statements"
         Scope: 
           ComplianceResourceTypes: 
             - "AWS::IAM::Policy"
         Source: 
-          Owner: "CUSTOM_LAMBDA"
+          Owner: CUSTOM_LAMBDA
           SourceDetails: 
             - 
               EventSource: "aws.config"
@@ -831,11 +835,12 @@
       Type: "AWS::IAM::Role"
       Condition: ShouldEnableCloudTrail
       Properties: 
+        RoleName: CloudTrailLogDelivery
         AssumeRolePolicyDocument: 
           Version: "2012-10-17"
           Statement: 
             - 
-              Effect: "Allow"
+              Effect: Allow
               Principal: 
                 Service: 
                   - "cloudtrail.amazonaws.com"
@@ -855,7 +860,7 @@
           Statement: 
             - 
               Sid: "AWSCloudTrailAclCheck"
-              Effect: "Allow"
+              Effect: Allow
               Principal: 
                 Service: "cloudtrail.amazonaws.com"
               Action: "s3:GetBucketAcl"
@@ -864,7 +869,7 @@
                   arn:aws:s3:::${S3BucketForGovernance}
             - 
               Sid: "AWSCloudTrailWrite"
-              Effect: "Allow"
+              Effect: Allow
               Principal: 
                 Service: "cloudtrail.amazonaws.com"
               Action: "s3:PutObject"
@@ -879,6 +884,7 @@
       Type: "AWS::SNS::Topic"
       Condition: ShouldEnableCloudTrail
       Properties: 
+        TopicName: CloudTrailEventNotifications
         Subscription: 
           - 
             Endpoint: !Ref NotificationEmailAddressForCloudTrailDelivery
@@ -895,7 +901,7 @@
           Statement: 
             - 
               Sid: "AWSCloudTrailSNSPolicy"
-              Effect: "Allow"
+              Effect: Allow
               Principal: 
                 Service: "cloudtrail.amazonaws.com"
               Resource: "*"
@@ -927,6 +933,7 @@
       Type: "AWS::SNS::Topic"
       Condition: ShouldEnableCloudWatchAlarms
       Properties: 
+        TopicName: CloudWatchNotifications
         Subscription: 
           - 
             Endpoint: !Ref NotificationEmailAddressForCloudWatchAlarms
@@ -954,6 +961,7 @@
       Type: "AWS::CloudWatch::Alarm"
       Condition: ShouldEnableCloudWatchAlarms
       Properties: 
+        AlarmName: Unauthorized Activity Attempt
         AlarmDescription: "Multiple unauthorized actions or logins attempted!"
         AlarmActions: 
           - !Ref "SnsTopicForCloudWatchEvents"
@@ -988,6 +996,7 @@
       Type: "AWS::CloudWatch::Alarm"
       Condition: ShouldEnableCloudWatchAlarms
       Properties: 
+        AlarmName: IAM Root Activity
         AlarmDescription: "Root user activity detected!"
         AlarmActions: 
           - !Ref "SnsTopicForCloudWatchEvents"
@@ -1007,11 +1016,12 @@
       Condition: ShouldEnableCloudWatchAlarms
       DependsOn: SnsTopicForCloudWatchEvents
       Properties: 
+        RoleName: CloudWatchEventsLambdaExecution
         AssumeRolePolicyDocument: 
           Version: "2012-10-17"
           Statement: 
             - 
-              Effect: "Allow"
+              Effect: Allow
               Principal: 
                 Service: 
                   - "lambda.amazonaws.com"
@@ -1027,7 +1037,7 @@
               Version: "2012-10-17"
               Statement: 
                 - 
-                  Effect: "Allow"
+                  Effect: Allow
                   Action: "sns:Publish"
                   Resource: !Ref SnsTopicForCloudWatchEvents
 
@@ -1038,12 +1048,10 @@
         - RoleForCloudWatchEvents
         - SnsTopicForCloudWatchEvents
       Properties: 
+        FunctionName: FormatCloudWatchEvent
         Code:
           ZipFile: !Sub |
-            #
-            # This file made available under CC0 1.0 Universal (https://creativecommons.org/publicdomain/zero/1.0/legalcode)
-            #
-            
+          
             #==================================================================================================
             # Function: process-cloudwatch-event
             # Purpose:  Processes CloudWatch Event before publishing to SNS.
@@ -1089,7 +1097,8 @@
     KmsKeyUseCloudWatchEventRule: 
       Type: "AWS::Events::Rule"
       Properties: 
-        Description: "Publishes formatted KMS encryption events to an SNS topic."
+        Name: DetectKmsKeyUsage
+        Description: Publishes formatted KMS encryption events to an SNS topic.
         EventPattern: 
           detail-type: 
             - "AWS API Call via CloudTrail"
@@ -1111,7 +1120,8 @@
     CloudTrailCloudWatchEventRule: 
       Type: "AWS::Events::Rule"
       Properties: 
-        Description: "Publishes formatted CloudTrail change events to an SNS topic."
+        Name: PublishFormattedCloudWatchEvent
+        Description: Publishes formatted CloudTrail change events to an SNS topic.
         EventPattern: 
           detail-type: 
             - "AWS API Call via CloudTrail"
@@ -1134,13 +1144,14 @@
     IamPolicyChangesCloudWatchEventRule: 
       Type: "AWS::Events::Rule"
       Properties: 
-        Description: "Publishes formatted IAM policy change events to an SNS topic."
+        Name: DetectIamPolicyChanges
+        Description: Publishes formatted IAM policy change events to an SNS topic.
         EventPattern: 
           detail-type: 
-            - "AWS API Call via CloudTrail"
+            - AWS API Call via CloudTrail
           detail: 
             eventSource: 
-              - "iam.amazonaws.com"
+              - iam.amazonaws.com
             eventName: 
               - CreateAccessKey
               - DeleteAccessKey
@@ -1171,13 +1182,14 @@
     NetworkAclChangeCloudWatchEventRule: 
       Type: "AWS::Events::Rule"
       Properties: 
-        Description: "Publishes formatted network ACL change events to an SNS topic."
+        Name: DetectNetworkAclChanges
+        Description: Publishes formatted network ACL change events to an SNS topic.
         EventPattern: 
           detail-type: 
-            - "AWS API Call via CloudTrail"
+            - AWS API Call via CloudTrail
           detail: 
             eventSource: 
-              - "ec2.amazonaws.com"
+              - ec2.amazonaws.com
             eventName: 
               - CreateNetworkAcl
               - CreateNetworkAclEntry
@@ -1197,13 +1209,14 @@
     SecurityGroupChangesCloudWatchEventRule: 
       Type: "AWS::Events::Rule"
       Properties: 
-        Description: "Publishes formatted security group change events to an SNS topic."
+        Name: DetectSecurityGroupChanges
+        Description: Publishes formatted security group change events to an SNS topic.
         EventPattern: 
           detail-type: 
-            - "AWS API Call via CloudTrail"
+            - AWS API Call via CloudTrail
           detail: 
             eventSource: 
-              - "ec2.amazonaws.com"
+              - ec2.amazonaws.com
             eventName: 
               - AuthorizeSecurityGroupIngress
               - AuthorizeSecurityGroupEgress
@@ -1223,13 +1236,14 @@
     BillingChangeCloudWatchEventRule: 
       Type: "AWS::Events::Rule"
       Properties: 
-        Description: "Publishes formatted billing change events to an SNS topic."
+        Name: DetectBillingChangeEvents
+        Description: Publishes formatted billing change events to an SNS topic.
         EventPattern: 
           detail-type: 
-            - "AWS API Call via CloudTrail"
+            - AWS API Call via CloudTrail
           detail: 
             eventSource: 
-              - "aws-portal.amazonaws.com"
+              - aws-portal.amazonaws.com
             eventName: 
               - ModifyAccount
               - ModifyBilling
@@ -1246,13 +1260,14 @@
     Ec2TerminationCloudWatchEventRule: 
       Type: "AWS::Events::Rule"
       Properties: 
-        Description: "Publishes formatted EC2 termination events to an SNS topic."
+        Name: DetectEc2TerminationEvents
+        Description: Publishes formatted EC2 termination events to an SNS topic.
         EventPattern: 
           detail-type: 
-            - "AWS API Call via CloudTrail"
+            - AWS API Call via CloudTrail
           detail: 
             eventSource: 
-              - "ec2.amazonaws.com"
+              - ec2.amazonaws.com
             eventName: 
               - TerminateInstance
         State: ENABLED
@@ -1267,13 +1282,14 @@
     VpcChangeCloudWatchEventRule: 
       Type: "AWS::Events::Rule"
       Properties: 
-        Description: "Publishes formatted VPC change events to an SNS topic."
+        Name: DetectVpcChangeEvents
+        Description: Publishes formatted VPC change events to an SNS topic.
         EventPattern: 
           detail-type: 
-            - "AWS API Call via CloudTrail"
+            - AWS API Call via CloudTrail
           detail: 
             eventSource: 
-              - "ec2.amazonaws.com"
+              - ec2.amazonaws.com
             eventName: 
               - TerminateInstance
               - AttachInternetGateway
@@ -1311,6 +1327,7 @@
       Type: "AWS::CloudWatch::Alarm"
       Condition: ShouldEnableCloudWatchAlarms
       Properties: 
+        AlarmName: Billing Changes
         AlarmDescription: "Alarms when changes are made to billing properties."
         AlarmActions: 
           - !Ref "SnsTopicForCloudWatchEvents"
@@ -1329,16 +1346,17 @@
       Type: "AWS::IAM::Role"
       Condition: ShouldEnableCloudWatchAlarms
       Properties: 
+        RoleName: DisableUnusedCredentials
         AssumeRolePolicyDocument: 
           Version: "2012-10-17"
           Statement: 
             - 
-              Effect: "Allow"
+              Effect: Allow
               Principal: 
                 Service: 
-                  - "lambda.amazonaws.com"
+                  - lambda.amazonaws.com
               Action: 
-                - "sts:AssumeRole"
+                - sts:AssumeRole
         Path: "/"
         ManagedPolicyArns:
           - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
@@ -1349,9 +1367,9 @@
               Version: "2012-10-17"
               Statement: 
                 - 
-                  Effect: "Allow"
+                  Effect: Allow
                   Action: 
-                    - "iam:DelelteLoginProfile"
+                    - "iam:DeleteLoginProfile"
                     - "iam:GetAccessKeyLastUsed"
                     - "iam:GetLoginProfile"
                     - "iam:DeleteLoginProfile"
@@ -1365,8 +1383,10 @@
       Condition: ShouldEnableCloudWatchAlarms
       DependsOn: RoleForDisableUnusedCredentialsFunction
       Properties: 
+        FunctionName: DisableUnusedCredentials
         Code:
           ZipFile: |
+          
             #==================================================================================================
             # Function: disable-unused-credentials
             # Purpose:  Disables unused credentials older than the given period.
@@ -1459,6 +1479,7 @@
     ScheduledRuleForDisableUnusedCredentials: 
       Type: "AWS::Events::Rule"
       Properties: 
+        Name: DisableUnusedCredentials
         Description: "Deletes unused passwords and disables unused access keys"
         ScheduleExpression: "rate(1 day)"
         State: "ENABLED"
