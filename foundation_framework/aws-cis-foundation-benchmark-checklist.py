@@ -45,7 +45,6 @@ IAM_MANAGER_POLICY = "iam_manager_policy"
 S3_WEB_REPORT = True
 
 # Where should the report be delivered to?
-# The script will add the account number if the bucket cannot be created.
 # Make sure to update permissions for the Lambda role if you change bucket name.
 S3_WEB_REPORT_BUCKET = "cr-cis-report"
 
