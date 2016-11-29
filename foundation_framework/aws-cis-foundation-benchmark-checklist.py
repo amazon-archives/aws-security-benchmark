@@ -46,6 +46,7 @@ S3_WEB_REPORT = True
 
 # Where should the report be delivered to?
 # The script will add the account number if the bucket cannot be created.
+# Make sure to update permissions for the Lambda role if you change bucket name.
 S3_WEB_REPORT_BUCKET = "cr-cis-report"
 
 # How many hours should the report be available? Default = 168h/7days
@@ -1956,12 +1957,19 @@ def shortAnnotation(controlResult):
         TYPE: Description
     """
     annotation = []
+    longAnnotation = False
     for n in range(len(controlResult)):
-        for x in range(len(controlResult[n+1])):
+        for x in range(len(controlResult[n+1])):            
             if controlResult[n+1][x+1]['Result'] is False:
-                annotation.append(controlResult[n+1][x+1]['ControlId'])
-    # Return JSON
-    return "{\"FailedControls\":"+json.dumps(annotation)+"}"
+                if len(str(annotation))<225:
+                    annotation.append(controlResult[n+1][x+1]['ControlId'])
+                else:
+                    longAnnotation = True
+    if longAnnotation:
+        annotation.append("etc")
+        return "{\"Failed\":"+json.dumps(annotation)+"}"
+    else:
+        return "{\"Failed\":"+json.dumps(annotation)+"}"
 
 
 def s3report(htmlReport):
