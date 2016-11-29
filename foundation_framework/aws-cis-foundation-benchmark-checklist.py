@@ -12,8 +12,8 @@ Attributes:
     S3_WEB_REPORT_OBFUSCATE_ACCOUNT (bool): Description
     SCRIPT_OUTPUT_JSON (bool): Description
 """
-### TODO:
-### Paginators where needed
+# TODO:
+# Paginators where needed
 
 from __future__ import print_function
 import json
@@ -82,14 +82,14 @@ def control_1_1_root_use(credreport):
     control = "1.1"
     description = "Avoid the use of the root account"
     scored = True
-    if "Fail" in credreport: # Report failure in control
+    if "Fail" in credreport:  # Report failure in control
         sys.exit(credreport)
     # Check if root is used in the last 24h
     now = time.strftime('%Y-%m-%dT%H:%M:%S+00:00', time.gmtime(time.time()))
     frm = "%Y-%m-%dT%H:%M:%S+00:00"
 
     try:
-        pwdDelta = (datetime.strptime(now, frm) 
+        pwdDelta = (datetime.strptime(now, frm)
                    - datetime.strptime(credreport[0]['password_last_used']
                     , frm))
         if (pwdDelta.days == CONTROL_1_1_DAYS) & (pwdDelta.seconds > 0): # Used within last 24h
@@ -102,10 +102,10 @@ def control_1_1_root_use(credreport):
             print("Something went wrong")
 
     try:
-        key1Delta = (datetime.strptime(now, frm) 
+        key1Delta = (datetime.strptime(now, frm)
                     - datetime.strptime(credreport[0]
                     ['access_key_1_last_used_date'], frm))
-        if (key1Delta.days == CONTROL_1_1_DAYS) & (key1Delta.seconds > 0): # Used within last 24h
+        if (key1Delta.days == CONTROL_1_1_DAYS) & (key1Delta.seconds > 0):  # Used within last 24h
             failReason = "Used within 24h"
             result = False
     except:
@@ -115,7 +115,7 @@ def control_1_1_root_use(credreport):
             print("Something went wrong")
     try:
         key2Delta = datetime.strptime(now, frm) - datetime.strptime(credreport[0]['access_key_2_last_used_date'], frm)
-        if (key2Delta.days == CONTROL_1_1_DAYS) & (key2Delta.seconds > 0): # Used within last 24h
+        if (key2Delta.days == CONTROL_1_1_DAYS) & (key2Delta.seconds > 0):  # Used within last 24h
             failReason = "Used within 24h"
             result = False
     except:
@@ -854,7 +854,7 @@ def control_2_5_ensure_config_all_regions(regions):
     control = "2.5"
     description = "Ensure AWS Config is enabled in all regions"
     scored = True
-    globalConfigCapture = False # Only one region needs to capture global events
+    globalConfigCapture = False  # Only one region needs to capture global events
     for n in regions:
         configClient = boto3.client('config', region_name=n)
         response = configClient.describe_configuration_recorder_status()
@@ -877,7 +877,7 @@ def control_2_5_ensure_config_all_regions(regions):
                 failReason = "Config not enabled in all regions, not capturing all/global events or delivery channel errors"
                 offenders.append(n + ":NotAllEvents")
         except:
-            pass # This indicates that Config is disabled in the region and will be captured above.
+            pass  # This indicates that Config is disabled in the region and will be captured above.
 
         # Check if region is capturing global events. Fail is verified later since only one region needs to capture them.
         try:
@@ -894,14 +894,14 @@ def control_2_5_ensure_config_all_regions(regions):
                 failReason = "Config not enabled in all regions, not capturing all/global events or delivery channel errors"
                 offenders.append(n + ":S3Delivery")
         except:
-            pass # Will be captured by earlier rule
+            pass  # Will be captured by earlier rule
         try:
             if response['DeliveryChannelsStatus'][0]['configStreamDeliveryInfo']['lastStatus'] != "SUCCESS":
                 result = False
                 failReason = "Config not enabled in all regions, not capturing all/global events or delivery channel errors"
                 offenders.append(n + ":SNSDelivery")
         except:
-            pass # Will be captured by earlier rule
+            pass  # Will be captured by earlier rule
 
     # Verify that global events is captured by any region
     if globalConfigCapture is False:
@@ -992,12 +992,12 @@ def control_2_8_ensure_kms_cmk_rotation(regions):
                     KeyId=keys['Keys'][i]['KeyId'])
                 if rotationStatus['KeyRotationEnabled'] is False:
                     keyDescription = kms_client.describe_key(KeyId=keys['Keys'][i]['KeyId'])
-                    if not "Default master key that protects my" in keyDescription['KeyMetadata']['Description']: # Ignore service keys
+                    if "Default master key that protects my" not in keyDescription['KeyMetadata']['Description']:  # Ignore service keys
                         result = False
                         failReason = "CloudTrail not using KMS CMK for encryption discovered"
                         offenders.append(str("Key:" + keyDescription['KeyMetadata']['Arn']))
             except:
-                pass # Ignore keys without permission, for example ACM key
+                pass  # Ignore keys without permission, for example ACM key
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
 
 
@@ -1768,14 +1768,13 @@ def control_4_5_ensure_route_tables_are_least_access(regions):
             for o in m['Routes']:
                 try:
                     if o['VpcPeeringConnectionId']:
-                        if int(str(o['DestinationCidrBlock']).split("/",1)[1]) < 24:
+                        if int(str(o['DestinationCidrBlock']).split("/", 1)[1]) < 24:
                             result = False
                             failReason = "Large CIDR block routed to peer discovered, please investigate"
                             offenders.append(n+" : "+m['RouteTableId'])
                 except:
                     pass
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
-
 
 
 # 4.5 Ensure routing tables for VPC peering are "least access" (Not Scored)
@@ -1798,7 +1797,7 @@ def control_4_5_ensure_route_tables_are_least_access(regions):
             for o in m['Routes']:
                 try:
                     if o['VpcPeeringConnectionId']:
-                        if int(str(o['DestinationCidrBlock']).split("/",1)[1]) < 24:
+                        if int(str(o['DestinationCidrBlock']).split("/", 1)[1]) < 24:
                             result = False
                             failReason = "Large CIDR block routed to peer discovered, please investigate"
                             offenders.append(n+" : "+m['RouteTableId'])
@@ -1922,7 +1921,7 @@ def json2html(controlResult):
     tableHeadOuter = "<table class=\"table table-outer\">"
     tableHeadInner = "<table class=\"table table-inner\">"
     tableHeadHover = "<table class=\"table table-hover\">"
-    table.append(tableHeadOuter) #Outer table
+    table.append(tableHeadOuter)  # Outer table
     for n, _ in enumerate(controlResult):
         table.append("<tr><th>"+str(n+1)+"</th><td>"+tableHeadInner)
         for x, _ in enumerate(controlResult[n+1]):
@@ -1958,9 +1957,9 @@ def shortAnnotation(controlResult):
     annotation = []
     longAnnotation = False
     for n in range(len(controlResult)):
-        for x in range(len(controlResult[n+1])):            
+        for x in range(len(controlResult[n+1])):
             if controlResult[n+1][x+1]['Result'] is False:
-                if len(str(annotation))<225:
+                if len(str(annotation)) < 225:
                     annotation.append(controlResult[n+1][x+1]['ControlId'])
                 else:
                     longAnnotation = True
@@ -2026,7 +2025,7 @@ def lambda_handler(event, context):
     cred_report = get_cred_report()
     password_policy = get_account_password_policy()
     cloud_trails = get_cloudtrails(region_list)
-    
+
     control1 = dict()
     control1[1] = control_1_1_root_use(cred_report)
     control1[2] = control_1_2_mfa_on_password_enabled_iam(cred_report)
@@ -2087,7 +2086,6 @@ def lambda_handler(event, context):
     control4[4] = control_4_4_ensure_default_security_groups_restricts_traffic(region_list)
     control4[5] = control_4_5_ensure_route_tables_are_least_access(region_list)
 
-
     # Build JSON reporting structure
     controls = dict()
     controls[1] = control1
@@ -2095,14 +2093,12 @@ def lambda_handler(event, context):
     controls[3] = control3
     controls[4] = control4
 
-
     if SCRIPT_OUTPUT_JSON:
         print("JSON output:")
         print("-------------------------------------------------------")
         print(json.dumps(controls, sort_keys=True, indent=4, separators=(',', ': ')))
         print("-------------------------------------------------------")
         print("")
-
 
     if S3_WEB_REPORT:
         htmlReport = json2html(controls)
@@ -2112,7 +2108,6 @@ def lambda_handler(event, context):
                 htmlReport[n] = re.sub(r"\d{12}", "111111111111", htmlReport[n])
         signedURL = s3report(htmlReport)
         print("SignedURL: "+signedURL)
-
 
     if configRule:
         evalAnnotation = shortAnnotation(controls)
