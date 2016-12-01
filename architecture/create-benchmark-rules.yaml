@@ -216,7 +216,10 @@
         FunctionName: ConfigureConfigRecorder
         Code:
           ZipFile: |
-
+            #==================================================================================================
+            # Function: ConfigureConfigRecorder
+            # Purpose:  Creates a new Config recorder or reuses an existing one
+            #==================================================================================================
             import boto3
             import json
             import cfnresponse
@@ -371,16 +374,148 @@
           Owner: "AWS"
           SourceIdentifier: "IAM_PASSWORD_POLICY"
 
-    ConfigRuleForRootAccountMfaEnabled: 
+    RoleForEvaluateRootAccountConfigRuleFunction: 
+      Type: "AWS::IAM::Role"
+      Condition: ShouldEnableConfig
+      Properties:
+        RoleName: EvaluateRootAccountSecurityPropertiesExecutionRole
+        AssumeRolePolicyDocument: 
+          Version: "2012-10-17"
+          Statement: 
+            - 
+              Effect: Allow
+              Principal: 
+                Service: 
+                  - "lambda.amazonaws.com"
+              Action: 
+                - "sts:AssumeRole"
+        Path: "/"
+        ManagedPolicyArns:
+          - arn:aws:iam::aws:policy/AWSLambdaExecute
+          - arn:aws:iam::aws:policy/IAMReadOnlyAccess
+          - arn:aws:iam::aws:policy/service-role/AWSConfigRulesExecutionRole
+
+    FunctionForEvaluateRootAccountRule:
+      Type: "AWS::Lambda::Function"
+      Condition: ShouldEnableConfig
+      DependsOn: RoleForEvaluateRootAccountConfigRuleFunction
+      Properties: 
+        FunctionName: EvaluateRootAccount
+        Code:
+          ZipFile: |
+            #==================================================================================================
+            # Function: EvaluateRootAccountSecurityProperties
+            # Purpose:  Evaluates the root account for security properties
+            #==================================================================================================
+
+            import json
+            import boto3
+            import datetime
+
+            FIELD_ACCESS_KEY_1_ACTIVE = 8
+            FIELD_ACCESS_KEY_2_ACTIVE = 13
+
+            def lambda_handler(event, context):
+
+
+                print(json.dumps(event))
+                is_compliant = True
+                compliance_status = ''
+                annotation = ''
+
+                invoking_event = json.loads(event['invokingEvent'])
+                result_token = 'No token found.'
+                if 'resultToken' in event:
+                    result_token = event['resultToken']
+
+                client = boto3.client('iam')
+                
+                # Determine whether the root account has MFA enabled.
+                summary = client.get_account_summary().get('SummaryMap')
+                if 'AccountMFAEnabled' in summary and summary['AccountMFAEnabled'] == 1:
+                    is_compliant = is_compliant and True
+                else:
+                    is_compliant = is_compliant and False
+                    annotation = annotation + ' The root account does not have MFA enabled.'
+
+                # Determine whether the root account uses hardware-based MFA.
+                mfa_devices = client.list_virtual_mfa_devices().get('VirtualMFADevices')
+                for mfa_device in mfa_devices:
+                    if not 'SerialNumber' in mfa_device:
+                        is_compliant = is_compliant and True
+                    else:
+                        is_compliant = is_compliant and False
+                        annotation = annotation + ' The root account does not have hardware-based MFA enabled.'
+
+                # Determine whether the root account has active access keys.
+                # The credential report will contain comma-separated values, so transform the users into a list.
+                response = client.generate_credential_report()
+                content = client.get_credential_report().get('Content')
+                users = content.splitlines()
+
+                # Look for the '<root_account>' user value and determine whether acccess keys are active.
+                for user in users:
+                    if '<root_account>' in user:
+                        user_values = user.split(',')
+                        if user_values[FIELD_ACCESS_KEY_1_ACTIVE].lower() == 'false' and user_values[FIELD_ACCESS_KEY_2_ACTIVE].lower() == 'false':
+                            is_compliant = is_compliant and True
+                        else:
+                            is_compliant = is_compliant and False
+                            annotation = annotation + ' The root account has active access keys associated with it.'
+                        break
+
+                config = boto3.client('config')
+                config.put_evaluations(
+                    Evaluations=[
+                        {
+                            'ComplianceResourceType':
+                                'AWS::::Account',
+                            'ComplianceResourceId':
+                                'Root',
+                            'ComplianceType':
+                                'COMPLIANT' if is_compliant else 'NON_COMPLIANT',
+                            'Annotation':
+                                annotation,
+                            'OrderingTimestamp':
+                                datetime.datetime.now(),
+                        },
+                    ],
+                    ResultToken=result_token
+                )
+
+        Description: Evaluates the security properties of the root account
+        Handler: index.lambda_handler
+        MemorySize: 1024
+        Role: !GetAtt RoleForEvaluateRootAccountConfigRuleFunction.Arn
+        Runtime: python2.7
+        Timeout: 10
+        
+    EvaluateRootAccountFunction: 
+      Type: "AWS::Lambda::Permission"
+      Condition: ShouldEnableConfig
+      DependsOn: FunctionForEvaluateRootAccountRule
+      Properties: 
+        FunctionName: !GetAtt FunctionForEvaluateRootAccountRule.Arn
+        Action: "lambda:InvokeFunction"
+        Principal: "config.amazonaws.com"
+
+    ConfigRuleForEvaluateRootAccount: 
       Type: "AWS::Config::ConfigRule"
       Condition: ShouldEnableConfig
       DependsOn: ConfigConfigurationRecorder
       Properties: 
         ConfigRuleName: RootAccoutMustHaveMfaEnabled
-        Description: "Checks whether the root user of your AWS account requires multi-factor authentication for console sign-in."
+        Description: Evaluates the security properties of the root account.
+        Scope: 
+          ComplianceResourceTypes: 
+            - "AWS::::Account"
         Source: 
-          Owner: "AWS"
-          SourceIdentifier: "ROOT_ACCOUNT_MFA_ENABLED"
+          Owner: CUSTOM_LAMBDA
+          SourceDetails: 
+            - 
+              EventSource: "aws.config"
+              MessageType: "ConfigurationItemChangeNotification"
+          SourceIdentifier: !GetAtt FunctionForEvaluateRootAccountRule.Arn
 
     ConfigRuleForRequiredTags: 
       Type: "AWS::Config::ConfigRule"
@@ -468,6 +603,7 @@
       Type: "AWS::IAM::Role"
       Condition: ShouldEnableConfig
       Properties: 
+        RoleName: VpcFlowLogRole
         AssumeRolePolicyDocument: 
           Version: "2012-10-17"
           Statement: 
@@ -492,7 +628,10 @@
         FunctionName: EvaluateVpcFlowLogs
         Code:
           ZipFile: |
-
+            #==================================================================================================
+            # Function: EvaluateVpcFlowLogs
+            # Purpose:  Determines whether VPC Flow Logs are enabled in the region
+            #==================================================================================================
             import boto3
             import json
 
@@ -607,7 +746,10 @@
         FunctionName: EvaluateUserMfaUsage
         Code:
           ZipFile: |
-
+            #==================================================================================================
+            # Function: EvaluateUserMfaUsage
+            # Purpose:  Determines whether IAM users use MFA
+            #==================================================================================================
             import json
             import boto3
 
@@ -691,11 +833,11 @@
               MessageType: "ConfigurationItemChangeNotification"
           SourceIdentifier: !GetAtt FunctionForRoleForMfaOnUsersRule.Arn
               
-    RoleForAuditPolicyPermissionsConfigRuleFunction: 
+    RoleForEvaluatePolicyPermissionsConfigRuleFunction: 
       Type: "AWS::IAM::Role"
       Condition: ShouldEnableConfig
       Properties: 
-        RoleName: AuditPolicyPermissionsRole
+        RoleName: EvaluatePolicyPermissionsRole
         AssumeRolePolicyDocument: 
           Version: "2012-10-17"
           Statement: 
@@ -723,18 +865,17 @@
                     - "iam:GetPolicyVersion"
                   Resource: "*"
 
-    FunctionForAuditPolicyPermissionsRule:
+    FunctionForEvaluatePolicyPermissionsRule:
       Type: "AWS::Lambda::Function"
       Condition: ShouldEnableConfig
-      DependsOn: RoleForAuditPolicyPermissionsConfigRuleFunction
+      DependsOn: RoleForEvaluatePolicyPermissionsConfigRuleFunction
       Properties: 
-        FunctionName: AuditPolicyPermissions
+        FunctionName: EvaluatePolicyPermissions
         Code:
           ZipFile: |
-
             #==================================================================================================
-            # Function: audit-policy-permissions
-            # Purpose:  Config Rule to audit overly permissive policies
+            # Function: EvaluatePolicyPermissions
+            # Purpose:  Evaluates policies for over permissiveness
             #==================================================================================================
             import boto3
             import json
@@ -787,26 +928,26 @@
         Description: Evaluates whether IAM policies contain *.* statements
         Handler: index.lambda_handler
         MemorySize: 1024
-        Role: !GetAtt RoleForAuditPolicyPermissionsConfigRuleFunction.Arn
+        Role: !GetAtt RoleForEvaluatePolicyPermissionsConfigRuleFunction.Arn
         Runtime: python2.7
         Timeout: 10      
 
-    ConfigPermissionToCallAuditPolicyPermissionsLambda: 
+    ConfigPermissionToCallEvaluatePolicyPermissionsLambda: 
       Type: "AWS::Lambda::Permission"
       Condition: ShouldEnableConfig
-      DependsOn: FunctionForAuditPolicyPermissionsRule
+      DependsOn: FunctionForEvaluatePolicyPermissionsRule
       Properties: 
-        FunctionName: !GetAtt FunctionForAuditPolicyPermissionsRule.Arn
+        FunctionName: !GetAtt FunctionForEvaluatePolicyPermissionsRule.Arn
         Action: "lambda:InvokeFunction"
         Principal: "config.amazonaws.com"
 
-    ConfigRuleForAuditPolicyPermissions: 
+    ConfigRuleForEvaluatePolicyPermissions: 
       Type: "AWS::Config::ConfigRule"
       Condition: ShouldEnableConfig
       DependsOn: 
         - ConfigConfigurationRecorder
-        - FunctionForAuditPolicyPermissionsRule
-        - ConfigPermissionToCallAuditPolicyPermissionsLambda
+        - FunctionForEvaluatePolicyPermissionsRule
+        - ConfigPermissionToCallEvaluatePolicyPermissionsLambda
       Properties: 
         ConfigRuleName: IamPoliciesMustNotContainStarStar
         Description: "Evaluates whether IAM policies contain *.* statements"
@@ -819,7 +960,7 @@
             - 
               EventSource: "aws.config"
               MessageType: "ConfigurationItemChangeNotification"
-          SourceIdentifier: !GetAtt FunctionForAuditPolicyPermissionsRule.Arn
+          SourceIdentifier: !GetAtt FunctionForEvaluatePolicyPermissionsRule.Arn
 
 
     #==================================================
@@ -1177,33 +1318,6 @@
             Id: TargetFunctionV1
 
     #==================================================
-    # Network ACL Change Detection
-    #==================================================
-    NetworkAclChangeCloudWatchEventRule: 
-      Type: "AWS::Events::Rule"
-      Properties: 
-        Name: DetectNetworkAclChanges
-        Description: Publishes formatted network ACL change events to an SNS topic.
-        EventPattern: 
-          detail-type: 
-            - AWS API Call via CloudTrail
-          detail: 
-            eventSource: 
-              - ec2.amazonaws.com
-            eventName: 
-              - CreateNetworkAcl
-              - CreateNetworkAclEntry
-              - DeleteNetworkAcl
-              - DeleteNetworkAclEntry
-              - ReplaceNetworkAclEntry
-              - ReplaceNetworkAclAssociation
-        State: ENABLED
-        Targets: 
-          - 
-            Arn: !GetAtt FunctionToFormatCloudWatchEvent.Arn
-            Id: TargetFunctionV1
-
-    #==================================================
     # Security Group Change Detection
     #==================================================
     SecurityGroupChangesCloudWatchEventRule: 
@@ -1277,13 +1391,13 @@
             Id: TargetFunctionV1
 
     #==================================================
-    # VPC Change Detection
+    # Network Change Detection
     #==================================================
-    VpcChangeCloudWatchEventRule: 
+    NetworkChangeCloudWatchEventRule: 
       Type: "AWS::Events::Rule"
       Properties: 
-        Name: DetectVpcChangeEvents
-        Description: Publishes formatted VPC change events to an SNS topic.
+        Name: DetectNetworkChangeEvents
+        Description: Publishes formatted network change events to an SNS topic.
         EventPattern: 
           detail-type: 
             - AWS API Call via CloudTrail
@@ -1291,16 +1405,27 @@
             eventSource: 
               - ec2.amazonaws.com
             eventName: 
-              - TerminateInstance
               - AttachInternetGateway
               - AssociateRouteTable
+              - CreateCustomerGateway
+              - CreateInternetGateway
+              - CreateNetworkAcl
+              - CreateNetworkAclEntry
               - CreateRoute
+              - CreateRouteTable
               - DeleteCustomerGateway
               - DeleteInternetGateway
+              - DeleteNetworkAcl
+              - DeleteNetworkAclEntry
               - DeleteRoute
               - DeleteRouteTable
               - DeleteDhcpOptions
-              - DisassociateRouteTable)
+              - DetachInternetGateway
+              - DisassociateRouteTable
+              - ReplaceNetworkAclEntry
+              - ReplaceNetworkAclAssociation
+              - ReplaceRoute
+              - ReplaceRouteTableAssociation
         State: ENABLED
         Targets: 
           - 
