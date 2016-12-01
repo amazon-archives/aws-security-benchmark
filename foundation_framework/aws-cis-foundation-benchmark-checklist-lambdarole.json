@@ -9,7 +9,16 @@
         "s3:DeleteObject"
       ],
       "Resource":"arn:aws:s3:::cr-cis-report/*"
-     },
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "*"
+    },
     {
       "Effect": "Allow",
       "Action": [
