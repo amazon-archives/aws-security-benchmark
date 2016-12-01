@@ -1881,7 +1881,7 @@ def set_evaluation(invokeEvent, mainEvent, annotation):
                     'ComplianceResourceType': 'AWS::::Account',
                     'ComplianceResourceId': mainEvent['accountId'],
                     'ComplianceType': 'NON_COMPLIANT',
-                    'Annotation': 'Failed controls: ' + str(annotation),
+                    'Annotation': str(annotation),
                     'OrderingTimestamp': invokeEvent['notificationCreationTime']
                 },
             ],
@@ -1959,7 +1959,7 @@ def shortAnnotation(controlResult):
     for n in range(len(controlResult)):
         for x in range(len(controlResult[n+1])):
             if controlResult[n+1][x+1]['Result'] is False:
-                if len(str(annotation)) < 200:
+                if len(str(annotation)) < 220:
                     annotation.append(controlResult[n+1][x+1]['ControlId'])
                 else:
                     longAnnotation = True
