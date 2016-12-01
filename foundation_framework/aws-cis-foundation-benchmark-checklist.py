@@ -1959,7 +1959,7 @@ def shortAnnotation(controlResult):
     for n in range(len(controlResult)):
         for x in range(len(controlResult[n+1])):
             if controlResult[n+1][x+1]['Result'] is False:
-                if len(str(annotation)) < 225:
+                if len(str(annotation)) < 200:
                     annotation.append(controlResult[n+1][x+1]['ControlId'])
                 else:
                     longAnnotation = True
