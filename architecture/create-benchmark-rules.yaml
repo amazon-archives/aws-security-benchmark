@@ -506,9 +506,6 @@
       Properties: 
         ConfigRuleName: RootAccoutMustHaveMfaEnabled
         Description: Evaluates the security properties of the root account.
-        Scope: 
-          ComplianceResourceTypes: 
-            - "AWS::::Account"
         Source: 
           Owner: CUSTOM_LAMBDA
           SourceDetails: 
