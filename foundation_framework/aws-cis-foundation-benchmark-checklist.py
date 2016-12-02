@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 """Summary
 
 Attributes:
@@ -24,6 +26,7 @@ import re
 import tempfile
 from datetime import datetime
 import boto3
+import getopt
 
 
 # CONSTANTS used in validation
@@ -46,7 +49,7 @@ S3_WEB_REPORT = True
 
 # Where should the report be delivered to?
 # Make sure to update permissions for the Lambda role if you change bucket name.
-S3_WEB_REPORT_BUCKET = "cr-cis-report"
+S3_WEB_REPORT_BUCKET = "cis-security-report-internal"
 
 # How many hours should the report be available? Default = 168h/7days
 S3_WEB_REPORT_EXPIRE = "168"
@@ -58,11 +61,8 @@ S3_WEB_REPORT_OBFUSCATE_ACCOUNT = True
 # Would you like to print the results as JSON to output?
 SCRIPT_OUTPUT_JSON = True
 
-
-IAM_CLIENT = boto3.client('iam')
-S3_CLIENT = boto3.client('s3')
-EC2_CLIENT = boto3.client('ec2')
-
+DEFAULT_REGION = 'us-east-1'
+PROFILE_NAME = 'default'
 
 # --- 1 Identity and Access Management ---
 
@@ -2114,4 +2114,38 @@ def lambda_handler(event, context):
         set_evaluation(invokingEvent, event, evalAnnotation)
 
 if __name__ == '__main__':
+
+    default_region = ''
+    profile_name = ''
+
+    try:
+        opts, args = getopt.getopt(sys.argv[1:],"hr:p:",["region=","profile="])
+    except getopt.GetoptError:
+        print(sys.argv[0]+' -r <region> -p <profile>')
+        sys.exit(2)
+
+    for opt, arg in opts:
+        if opt == '-h':
+             print(sys.argv[0]+' -r <region> -p <profile>')
+             sys.exit()
+        elif opt in ("-r", "--region"):
+             default_region = arg
+        elif opt in ("-p", "--profile"):
+             profile_name = arg
+
+    # Add support for AWS profiles
+    if not default_region:
+        default_region = DEFAULT_REGION
+
+    if not profile_name:
+        profile_name = PROFILE_NAME
+
+    print('Using region: '+default_region)
+    print('Using profile: '+profile_name)
+
+    session = boto3.Session(profile_name=profile_name)
+
+    IAM_CLIENT = session.client('iam', default_region)
+    S3_CLIENT  = session.client('s3', default_region)
+    EC2_CLIENT = session.client('ec2', default_region)
     lambda_handler("test", "test")
