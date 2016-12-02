@@ -371,7 +371,7 @@
           PasswordReusePrevention: 24
           MaxPasswordAge: 90
         Source: 
-          Owner: "AWS"
+          Owner: AWS
           SourceIdentifier: "IAM_PASSWORD_POLICY"
 
     RoleForEvaluateRootAccountConfigRuleFunction: 
@@ -468,16 +468,11 @@
                 config.put_evaluations(
                     Evaluations=[
                         {
-                            'ComplianceResourceType':
-                                'AWS::::Account',
-                            'ComplianceResourceId':
-                                'Root',
-                            'ComplianceType':
-                                'COMPLIANT' if is_compliant else 'NON_COMPLIANT',
-                            'Annotation':
-                                annotation,
-                            'OrderingTimestamp':
-                                datetime.datetime.now(),
+                            'ComplianceResourceType': 'AWS::::Account',
+                            'ComplianceResourceId': 'Root',
+                            'ComplianceType': 'COMPLIANT' if is_compliant else 'NON_COMPLIANT',
+                            'Annotation': annotation,
+                            'OrderingTimestamp': datetime.datetime.now(),
                         },
                     ],
                     ResultToken=result_token
@@ -544,8 +539,8 @@
         InputParameters: 
           tag1Key: CostCenter
         Source: 
-          Owner: "AWS"
-          SourceIdentifier: "REQUIRED_TAGS"
+          Owner: AWS
+          SourceIdentifier: REQUIRED_TAGS
 
     ConfigRuleForEncryptedVolumes: 
       Type: "AWS::Config::ConfigRule"
@@ -558,7 +553,7 @@
           ComplianceResourceTypes: 
             - "AWS::EC2::Volume"
         Source: 
-          Owner: "AWS"
+          Owner: AWS
           SourceIdentifier: "ENCRYPTED_VOLUMES"
 
     ConfigRuleForRestrictedSsh: 
@@ -572,7 +567,7 @@
           ComplianceResourceTypes: 
             - "AWS::EC2::SecurityGroup"
         Source: 
-          Owner: "AWS"
+          Owner: AWS
           SourceIdentifier: "INCOMING_SSH_DISABLED"
 
     ConfigRuleForUnrestrictedPorts: 
@@ -593,7 +588,7 @@
           ComplianceResourceTypes: 
             - "AWS::EC2::SecurityGroup"
         Source: 
-          Owner: "AWS"
+          Owner: AWS
           SourceIdentifier: "RESTRICTED_INCOMING_TRAFFIC"
 
     RoleForVpcFlowLogConfigRuleFunction: 
@@ -675,7 +670,6 @@
                        },
                    ],
                    ResultToken=event['resultToken'])
-
           
         Description: Evaluates whether VPC Flow Logs are enabled for the VPCs
         Handler: index.lambda_handler
@@ -780,21 +774,14 @@
                 config.put_evaluations(
                     Evaluations=[
                         {
-                            'ComplianceResourceType':
-                                configuration_item['resourceType'],
-                            'ComplianceResourceId':
-                                configuration_item['resourceId'],
-                            'ComplianceType':
-                                evaluate_compliance(configuration_item),
-                            'Annotation':
-                                'The user does not have MFA enabled.',
-                            'OrderingTimestamp':
-                                configuration_item['configurationItemCaptureTime']
+                            'ComplianceResourceType': configuration_item['resourceType'],
+                            'ComplianceResourceId': configuration_item['resourceId'],
+                            'ComplianceType': evaluate_compliance(configuration_item),
+                            'OrderingTimestamp': configuration_item['configurationItemCaptureTime']
                         },
                     ],
                     ResultToken=result_token
                 )
-
           
         Description: Evaluates whether users have MFA enabled.
         Handler: index.lambda_handler
@@ -959,6 +946,132 @@
               MessageType: "ConfigurationItemChangeNotification"
           SourceIdentifier: !GetAtt FunctionForEvaluatePolicyPermissionsRule.Arn
 
+
+    RoleForEvaluateUserPolicyAssociationConfigRuleFunction: 
+      Type: "AWS::IAM::Role"
+      Condition: ShouldEnableConfig
+      Properties: 
+        RoleName: EvaluateUserPolicyAssociationsRole
+        AssumeRolePolicyDocument: 
+          Version: "2012-10-17"
+          Statement: 
+            - 
+              Effect: Allow
+              Principal: 
+                Service: 
+                  - "lambda.amazonaws.com"
+              Action: 
+                - "sts:AssumeRole"
+        Path: "/"
+        ManagedPolicyArns:
+          - arn:aws:iam::aws:policy/AWSLambdaExecute
+          - arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess
+        Policies: 
+          -
+            PolicyName: AllowListPolicies
+            PolicyDocument: 
+              Version: "2012-10-17"
+              Statement: 
+                - 
+                  Effect: Allow
+                  Action:
+                    - config:PutEvaluations
+                    - iam:ListAttachedUserPolicies
+                    - iam:ListUserPolicies
+                  Resource: "*"
+
+    FunctionForEvaluateUserPolicyAssociationRule:
+      Type: "AWS::Lambda::Function"
+      Condition: ShouldEnableConfig
+      DependsOn: RoleForEvaluateUserPolicyAssociationConfigRuleFunction
+      Properties: 
+        FunctionName: EvaluateUserPolicyAssociations
+        Description: Evaluates whether users have policies associated with them. Users should inherit permissions from groups instead.
+        Code:
+          ZipFile: |
+            #==================================================================================================
+            # Function: EvaluateUserPolicyAssociations
+            # Purpose:  Evaluates whether users have policies associated with them. Users should inherit 
+            #           permissions from groups instead.
+            #==================================================================================================
+
+            import json
+            import boto3
+
+            APPLICABLE_RESOURCES = ['AWS::IAM::User']
+
+            def evaluate_compliance(configuration_item):
+                if configuration_item['resourceType'] not in APPLICABLE_RESOURCES:
+                    return 'NOT_APPLICABLE'
+
+                user_name = configuration_item['configuration']['userName']
+
+                iam = boto3.client('iam')
+                if iam.list_user_policies(UserName=user_name).get('PolicyNames') \
+                    or iam.list_attached_user_policies(UserName=user_name).get('AttachedPolicies'):
+                    return 'NON_COMPLIANT'
+                else:
+                    return 'COMPLIANT'
+
+            def lambda_handler(event, context):
+
+                print(json.dumps(event))
+
+                invoking_event = json.loads(event['invokingEvent'])
+                configuration_item = invoking_event['configurationItem']
+                result_token = 'No token found.'
+                if 'resultToken' in event:
+                    result_token = event['resultToken']
+
+                config = boto3.client('config')
+                config.put_evaluations(
+                    Evaluations=[
+                        {
+                            'ComplianceResourceType': configuration_item['resourceType'],
+                            'ComplianceResourceId': configuration_item['resourceId'],
+                            'ComplianceType': evaluate_compliance(configuration_item),
+                            'OrderingTimestamp': configuration_item['configurationItemCaptureTime']
+                        },
+                    ],
+                    ResultToken=result_token
+                )
+          
+        Description: Evaluates whether VPC Flow Logs are enabled for the VPCs
+        Handler: index.lambda_handler
+        MemorySize: 1024
+        Role: !GetAtt RoleForEvaluateUserPolicyAssociationConfigRuleFunction.Arn
+        Runtime: python2.7
+        Timeout: 10      
+
+    ConfigPermissionToCallEvaluateUserPolicyAssociationLambda: 
+      Type: "AWS::Lambda::Permission"
+      Condition: ShouldEnableConfig
+      DependsOn: FunctionForEvaluateUserPolicyAssociationRule
+      Properties: 
+        FunctionName: !GetAtt FunctionForEvaluateUserPolicyAssociationRule.Arn
+        Action: "lambda:InvokeFunction"
+        Principal: "config.amazonaws.com"
+
+    ConfigRuleForEvaluateUserPolicyAssociations: 
+      Type: "AWS::Config::ConfigRule"
+      Condition: ShouldEnableConfig
+      DependsOn: 
+        - ConfigConfigurationRecorder
+        - FunctionForEvaluateUserPolicyAssociationRule
+        - ConfigPermissionToCallEvaluateUserPolicyAssociationLambda
+      Properties: 
+        ConfigRuleName: UsersMustNotHaveAssociatedPolicies
+        Description: "Evaluates whether users have policies associated with them. Users should inherit permissions from groups instead."
+        Scope: 
+          ComplianceResourceTypes: 
+            - "AWS::IAM::User"
+        Source: 
+          Owner: CUSTOM_LAMBDA
+          SourceDetails: 
+            - 
+              EventSource: "aws.config"
+              MessageType: "ConfigurationItemChangeNotification"
+          SourceIdentifier: !GetAtt FunctionForEvaluateUserPolicyAssociationRule.Arn
 
     #==================================================
     # CloudTrail
