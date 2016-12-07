@@ -747,10 +747,21 @@ def control_1_24_no_overly_permissive_policies():
             PolicyArn=m['Arn'],
             VersionId=m['DefaultVersionId']
         )
-        for n in policy['PolicyVersion']['Document']['Statement']:
-            if ("'*'" in str(n['Action']) or str(n['Action']) == "*") and ("'*'" in str(n['Resource']) or str(n['Resource']) == "*"):
-                failReason = "Found full administrative policy"
-                offenders.append(str(m['Arn']))
+
+        statements = []
+        # a policy may contain a single statement, a single statement in an array, or multiple statements in an array
+        if isinstance(policy['PolicyVersion']['Document']['Statement'], list):
+            for statement in policy['PolicyVersion']['Document']['Statement']:
+                statements.append(statement)
+        else:
+            statements.append(policy['PolicyVersion']['Document']['Statement'])
+
+        for n in statements:
+            # a policy statement has to contain either an Action or a NotAction
+            if 'Action' in n.keys():
+                if ("'*'" in str(n['Action']) or str(n['Action']) == "*") and ("'*'" in str(n['Resource']) or str(n['Resource']) == "*"):
+                    failReason = "Found full administrative policy"
+                    offenders.append(str(m['Arn']))
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
 
 
@@ -832,9 +843,13 @@ def control_2_3_ensure_cloudtrail_bucket_not_public(cloudtrails):
     scored = True
     for m, n in cloudtrails.iteritems():
         for o in n:
-            response = S3_CLIENT.get_bucket_acl(
-                Bucket=o['S3BucketName']
-            )
+            # it is possible to have a cloudtrail configured with a nonexistant bucket
+            try:
+              response = S3_CLIENT.get_bucket_acl(
+                  Bucket=o['S3BucketName']
+              )
+            except:
+                pass
             for p in range(len(response['Grants'])):
                 try:
                     if re.search(r'(AllUsers|AuthenticatedUsers)', response['Grants'][p]['Grantee']['URI']):
@@ -966,9 +981,13 @@ def control_2_6_ensure_cloudtrail_bucket_logging(cloudtrails):
     scored = True
     for m, n in cloudtrails.iteritems():
         for o in n:
-            response = S3_CLIENT.get_bucket_logging(
-                Bucket=o['S3BucketName']
-            )
+            # it is possible to have a cloudtrail configured with a nonexistant bucket
+            try:
+                response = S3_CLIENT.get_bucket_logging(
+                  Bucket=o['S3BucketName']
+                )
+            except:
+                pass
             try:
                 if response['LoggingEnabled']:
                     pass
