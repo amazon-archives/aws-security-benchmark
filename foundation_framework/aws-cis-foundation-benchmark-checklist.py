@@ -748,7 +748,7 @@ def control_1_24_no_overly_permissive_policies():
             VersionId=m['DefaultVersionId']
         )
         for n in policy['PolicyVersion']['Document']['Statement']:
-            if ("'*'" in str(n['Action']) or str(n['Action']) == "*") and ("'*'" in n['Resource'] or n['Resource'] == "*"):
+            if ("'*'" in str(n['Action']) or str(n['Action']) == "*") and ("'*'" in str(n['Resource']) or str(n['Resource']) == "*"):
                 failReason = "Found full administrative policy"
                 offenders.append(str(m['Arn']))
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
