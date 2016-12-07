@@ -12,8 +12,6 @@ Attributes:
     S3_WEB_REPORT_OBFUSCATE_ACCOUNT (bool): Description
     SCRIPT_OUTPUT_JSON (bool): Description
 """
-# TODO:
-# Paginators where needed
 
 from __future__ import print_function
 import json
