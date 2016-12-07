@@ -282,9 +282,13 @@ def control_1_5_password_policy_uppercase(passwordpolicy):
     control = "1.5"
     description = "Ensure IAM password policy requires at least one uppercase letter"
     scored = True
-    if passwordpolicy['RequireUppercaseCharacters'] is False:
+    if passwordpolicy is False:
         result = False
-        failReason = "Password policy does not require at least one uppercase letter"
+        failReason = "Account does not have a IAM password policy."
+    else:
+        if passwordpolicy['RequireUppercaseCharacters'] is False:
+            result = False
+            failReason = "Password policy does not require at least one uppercase letter"
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
 
 
@@ -304,9 +308,13 @@ def control_1_6_password_policy_lowercase(passwordpolicy):
     control = "1.6"
     description = "Ensure IAM password policy requires at least one lowercase letter"
     scored = True
-    if passwordpolicy['RequireLowercaseCharacters'] is False:
+    if passwordpolicy is False:
         result = False
-        failReason = "Password policy does not require at least one uppercase letter"
+        failReason = "Account does not have a IAM password policy."
+    else:
+        if passwordpolicy['RequireLowercaseCharacters'] is False:
+            result = False
+            failReason = "Password policy does not require at least one uppercase letter"
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
 
 
@@ -326,9 +334,13 @@ def control_1_7_password_policy_symbol(passwordpolicy):
     control = "1.7"
     description = "Ensure IAM password policy requires at least one symbol"
     scored = True
-    if passwordpolicy['RequireSymbols'] is False:
+    if passwordpolicy is False:
         result = False
-        failReason = "Password policy does not require at least one symbol"
+        failReason = "Account does not have a IAM password policy."
+    else:
+        if passwordpolicy['RequireSymbols'] is False:
+            result = False
+            failReason = "Password policy does not require at least one symbol"
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
 
 
@@ -348,9 +360,13 @@ def control_1_8_password_policy_number(passwordpolicy):
     control = "1.8"
     description = "Ensure IAM password policy requires at least one number"
     scored = True
-    if passwordpolicy['RequireNumbers'] is False:
+    if passwordpolicy is False:
         result = False
-        failReason = "Password policy does not require at least one number"
+        failReason = "Account does not have a IAM password policy."
+    else:
+        if passwordpolicy['RequireNumbers'] is False:
+            result = False
+            failReason = "Password policy does not require at least one number"
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
 
 
@@ -370,9 +386,13 @@ def control_1_9_password_policy_length(passwordpolicy):
     control = "1.9"
     description = "Ensure IAM password policy requires minimum length of 14 or greater"
     scored = True
-    if passwordpolicy['MinimumPasswordLength'] < 14:
+    if passwordpolicy is False:
         result = False
-        failReason = "Password policy does not require at least 14 characters"
+        failReason = "Account does not have a IAM password policy."
+    else:
+        if passwordpolicy['MinimumPasswordLength'] < 14:
+            result = False
+            failReason = "Password policy does not require at least 14 characters"
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
 
 
@@ -392,15 +412,19 @@ def control_1_10_password_policy_reuse(passwordpolicy):
     control = "1.10"
     description = "Ensure IAM password policy prevents password reuse"
     scored = True
-    try:
-        if passwordpolicy['PasswordReusePrevention'] == 24:
-            pass
-        else:
+    if passwordpolicy is False:
+        result = False
+        failReason = "Account does not have a IAM password policy."
+    else:
+        try:
+            if passwordpolicy['PasswordReusePrevention'] == 24:
+                pass
+            else:
+                result = False
+                failReason = "Password policy does not prevent reusing last 24 passwords"
+        except:
             result = False
             failReason = "Password policy does not prevent reusing last 24 passwords"
-    except:
-        result = False
-        failReason = "Password policy does not prevent reusing last 24 passwords"
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
 
 
@@ -420,13 +444,17 @@ def control_1_11_password_policy_expire(passwordpolicy):
     control = "1.11"
     description = "Ensure IAM password policy expires passwords within 90 days or less"
     scored = True
-    if passwordpolicy['ExpirePasswords'] is True:
-        if 0 < passwordpolicy['MaxPasswordAge'] > 90:
+    if passwordpolicy is False:
+        result = False
+        failReason = "Account does not have a IAM password policy."
+    else:
+        if passwordpolicy['ExpirePasswords'] is True:
+            if 0 < passwordpolicy['MaxPasswordAge'] > 90:
+                result = False
+                failReason = "Password policy does not expire passwords after 90 days or less"
+        else:
             result = False
             failReason = "Password policy does not expire passwords after 90 days or less"
-    else:
-        result = False
-        failReason = "Password policy does not expire passwords after 90 days or less"
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
 
 
@@ -1715,6 +1743,7 @@ def control_4_3_ensure_flow_logs_enabled_on_all_vpc(regions):
         flowlogs = client.describe_flow_logs(
             #NextToken='string',
             #MaxResults=123
+            # No paginator in boto atm.
         )
         activeLogs = []
         for m in flowlogs['FlowLogs']:
@@ -1857,13 +1886,17 @@ def get_cred_report():
 
 
 def get_account_password_policy():
-    """Summary
+    """Check if a IAM password policy exists, if not return false
 
     Returns:
-        TYPE: Description
+        Account IAM password policy or False
     """
-    response = IAM_CLIENT.get_account_password_policy()
-    return response['PasswordPolicy']
+    try:
+        response = IAM_CLIENT.get_account_password_policy()
+        return response['PasswordPolicy']
+    except Exception as e:
+        if "cannot be found" in str(e):
+            return False
 
 
 def get_regions():
@@ -2004,9 +2037,10 @@ def json_output(controlResult):
     """
     inner = dict()
     outer = dict()
-    for m, _ in enumerate(controlResult):
+    for m in range(len(controlResult)):
+        inner = dict()
         for n in range(len(controlResult[m])):
-            x = controlResult[m][n]['ControlId'].split('.')[1]
+            x = int(controlResult[m][n]['ControlId'].split('.')[1])
             inner[x] = controlResult[m][n]
         y = controlResult[m][0]['ControlId'].split('.')[0]
         outer[y] = inner
