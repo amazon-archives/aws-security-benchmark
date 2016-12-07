@@ -1621,7 +1621,7 @@ def control_3_15_verify_sns_subscribers():
     Returns:
         TYPE: Description
     """
-    result = True
+    result = "Manual"
     failReason = ""
     offenders = []
     control = "3.15"
