@@ -236,9 +236,10 @@ def control_1_4_rotated_keys(credreport):
             except:
                 pass
             try:
-                delta = datetime.strptime(credreport[i]['access_key_1_last_used_date'], frm) - datetime.strptime(credreport[i]['access_key_1_last_rotated'], frm)
-                # Verify keys have been used since rotation. Give 1 day buffer.
-                if delta.days > 1:
+                last_used_datetime = datetime.strptime(credreport[i]['access_key_1_last_used_date'], frm)
+                last_rotated_datetime = datetime.strptime(credreport[i]['access_key_1_last_rotated'], frm)
+                # Verify keys have been used since rotation.
+                if last_used_datetime < last_rotated_datetime:
                     result = False
                     failReason = "Key rotation >90 days or not used since rotation"
                     offenders.append(str(credreport[i]['arn']) + ":unused key1")
@@ -255,9 +256,10 @@ def control_1_4_rotated_keys(credreport):
             except:
                 pass
             try:
-                delta = datetime.strptime(credreport[i]['access_key_2_last_used_date'], frm) - datetime.strptime(credreport[i]['access_key_2_last_rotated'], frm)
-                # Verify keys have been used since rotation. Give 1 day buffer.
-                if delta.days > 1:
+                last_used_datetime = datetime.strptime(credreport[i]['access_key_2_last_used_date'], frm)
+                last_rotated_datetime = datetime.strptime(credreport[i]['access_key_2_last_rotated'], frm)
+                # Verify keys have been used since rotation.
+                if last_used_datetime < last_rotated_datetime:
                     result = False
                     failReason = "Key rotation >90 days or not used since rotation"
                     offenders.append(str(credreport[i]['arn']) + ":unused key2")
