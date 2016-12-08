@@ -1697,8 +1697,8 @@ def control_4_1_ensure_ssh_not_open_to_world(regions):
         client = boto3.client('ec2', region_name=n)
         response = client.describe_security_groups()
         for m in response['SecurityGroups']:
-            if "0.0.0.0/0" in str(m['IpPermissions']):
-                for o in m['IpPermissions']:
+            for o in m['IpPermissions']:
+                if "0.0.0.0/0" in str(o['IpRanges']):
                     try:
                         if int(o['FromPort']) <= 22 <= int(o['ToPort']):
                             result = False
@@ -1729,8 +1729,8 @@ def control_4_2_ensure_rdp_not_open_to_world(regions):
         client = boto3.client('ec2', region_name=n)
         response = client.describe_security_groups()
         for m in response['SecurityGroups']:
-            if "0.0.0.0/0" in str(m['IpPermissions']):
-                for o in m['IpPermissions']:
+            for o in m['IpPermissions']:
+                if "0.0.0.0/0" in str(o['IpRanges']):
                     try:
                         if int(o['FromPort']) <= 3389 <= int(o['ToPort']):
                             result = False
@@ -2033,7 +2033,10 @@ def s3report(htmlReport):
         for item in htmlReport:
             f.write(item)
             f.flush()
-        S3_CLIENT.upload_file(f.name, S3_WEB_REPORT_BUCKET, 'report.html')
+        try:
+            S3_CLIENT.upload_file(f.name, S3_WEB_REPORT_BUCKET, 'report.html')
+        except Exception, e:
+            return "Failed to upload report to S3 because: " + str(e)
     ttl = int(S3_WEB_REPORT_EXPIRE) * 60
     signedURL = S3_CLIENT.generate_presigned_url(
         'get_object',
