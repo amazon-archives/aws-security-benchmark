@@ -856,7 +856,7 @@ def control_2_3_ensure_cloudtrail_bucket_not_public(cloudtrails):
                 try:
                     if re.search(r'(AllUsers|AuthenticatedUsers)', response['Grants'][p]['Grantee']['URI']):
                         result = False
-                        failReason = failreason + "Publically accessible CloudTrail bucket discovered"
+                        failReason = failReason + "Publically accessible CloudTrail bucket discovered"
                         offenders.append(str(o['TrailARN']))
                 except:
                     pass
@@ -997,7 +997,7 @@ def control_2_6_ensure_cloudtrail_bucket_logging(cloudtrails):
                     pass
             except:
                 result = False
-                failReason = failreason + "CloudTrail S3 bucket without logging discovered"
+                failReason = failReason + "CloudTrail S3 bucket without logging discovered"
                 offenders.append("Trail:" + str(o['TrailARN']) + " - S3Bucket:" + str(o['S3BucketName']))
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
 
