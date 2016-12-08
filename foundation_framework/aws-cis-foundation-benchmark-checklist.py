@@ -2039,7 +2039,10 @@ def s3report(htmlReport):
         for item in htmlReport:
             f.write(item)
             f.flush()
-        S3_CLIENT.upload_file(f.name, S3_WEB_REPORT_BUCKET, 'report.html')
+        try:
+            S3_CLIENT.upload_file(f.name, S3_WEB_REPORT_BUCKET, 'report.html')
+        except Exception, e:
+            return "Failed to upload report to S3 because: " + str(e)
     ttl = int(S3_WEB_REPORT_EXPIRE) * 60
     signedURL = S3_CLIENT.generate_presigned_url(
         'get_object',
