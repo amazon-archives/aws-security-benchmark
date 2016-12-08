@@ -845,16 +845,18 @@ def control_2_3_ensure_cloudtrail_bucket_not_public(cloudtrails):
         for o in n:
             # it is possible to have a cloudtrail configured with a nonexistant bucket
             try:
-              response = S3_CLIENT.get_bucket_acl(
-                  Bucket=o['S3BucketName']
-              )
+                response = S3_CLIENT.get_bucket_acl(
+                    Bucket=o['S3BucketName']
+                )
             except:
-                pass
+                result = False
+                failReason = "Cloudtrail not configured to log to S3. "
+                offenders.append(str(o['TrailARN']))
             for p in range(len(response['Grants'])):
                 try:
                     if re.search(r'(AllUsers|AuthenticatedUsers)', response['Grants'][p]['Grantee']['URI']):
                         result = False
-                        failReason = "Publically accessible CloudTrail bucket discovered"
+                        failReason = failreason + "Publically accessible CloudTrail bucket discovered"
                         offenders.append(str(o['TrailARN']))
                 except:
                     pass
@@ -987,13 +989,15 @@ def control_2_6_ensure_cloudtrail_bucket_logging(cloudtrails):
                   Bucket=o['S3BucketName']
                 )
             except:
-                pass
+                result = False
+                failReason = "Cloudtrail not configured to log to S3. "
+                offenders.append(str(o['TrailARN']))
             try:
                 if response['LoggingEnabled']:
                     pass
             except:
                 result = False
-                failReason = "CloudTrail S3 bucket without logging discovered"
+                failReason = failreason + "CloudTrail S3 bucket without logging discovered"
                 offenders.append("Trail:" + str(o['TrailARN']) + " - S3Bucket:" + str(o['S3BucketName']))
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
 
