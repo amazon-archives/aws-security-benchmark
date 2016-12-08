@@ -1,7 +1,7 @@
 ---
   
   #==================================================
-  # CloudWatch Template for establishing CIS AWS 1.1 benchmark governance rules 
+  # CloudFormation Template for establishing CIS AWS 1.1 benchmark governance rules 
   #==================================================
 
   AWSTemplateFormatVersion: "2010-09-09"
