@@ -1050,7 +1050,7 @@ def control_2_8_ensure_kms_cmk_rotation(regions):
                     keyDescription = kms_client.describe_key(KeyId=keys['Keys'][i]['KeyId'])
                     if "Default master key that protects my" not in keyDescription['KeyMetadata']['Description']:  # Ignore service keys
                         result = False
-                        failReason = "CloudTrail not using KMS CMK for encryption discovered"
+                        failReason = "KMS CMK rotation not enabled"
                         offenders.append("Key:" + str(keyDescription['KeyMetadata']['Arn']))
             except:
                 pass  # Ignore keys without permission, for example ACM key
