@@ -1711,7 +1711,7 @@ def control_4_1_ensure_ssh_not_open_to_world(regions):
                             failReason = "Found Security Group with port 22 open to the world (0.0.0.0/0)"
                             offenders.append(str(m['GroupId']))
                     except:
-                        if str(o['IpProtocol']) == "-1":
+                        if str(o['IpProtocol']) == "-1" and '0.0.0.0/0' in str(o['IpRanges']):
                             result = False
                             failReason = "Found Security Group with port 22 open to the world (0.0.0.0/0)"
                             offenders.append(str(n)+" : "+str(m['GroupId']))
@@ -1738,12 +1738,12 @@ def control_4_2_ensure_rdp_not_open_to_world(regions):
             if "0.0.0.0/0" in str(m['IpPermissions']):
                 for o in m['IpPermissions']:
                     try:
-                        if int(o['FromPort']) <= 3389 <= int(o['ToPort']):
+                        if int(o['FromPort']) <= 3389 <= int(o['ToPort']) and '0.0.0.0/0' in str(o['IpRanges']):
                             result = False
                             failReason = "Found Security Group with port 3389 open to the world (0.0.0.0/0)"
                             offenders.append(str(m['GroupId']))
                     except:
-                        if str(o['IpProtocol']) == "-1":
+                        if str(o['IpProtocol']) == "-1" and '0.0.0.0/0' in str(o['IpRanges']):
                             result = False
                             failReason = "Found Security Group with port 3389 open to the world (0.0.0.0/0)"
                             offenders.append(str(n)+" : "+str(m['GroupId']))
