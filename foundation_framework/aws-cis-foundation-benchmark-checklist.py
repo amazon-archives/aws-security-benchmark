@@ -1681,7 +1681,7 @@ def control_4_1_ensure_ssh_not_open_to_world(regions):
             if "0.0.0.0/0" in str(m['IpPermissions']):
                 for o in m['IpPermissions']:
                     try:
-                        if int(o['FromPort']) <= 22 <= int(o['ToPort']):
+                        if int(o['FromPort']) <= 22 <= int(o['ToPort']) and '0.0.0.0/0' in str(o['IpRanges']):
                             result = False
                             failReason = "Found Security Group with port 22 open to the world (0.0.0.0/0)"
                             offenders.append(str(m['GroupId']))
