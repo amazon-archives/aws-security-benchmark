@@ -1703,8 +1703,8 @@ def control_4_1_ensure_ssh_not_open_to_world(regions):
         client = boto3.client('ec2', region_name=n)
         response = client.describe_security_groups()
         for m in response['SecurityGroups']:
-            if "0.0.0.0/0" in str(m['IpPermissions']):
-                for o in m['IpPermissions']:
+            for o in m['IpPermissions']:
+                if "0.0.0.0/0" in str(o['IpRanges']):
                     try:
                         if int(o['FromPort']) <= 22 <= int(o['ToPort']) and '0.0.0.0/0' in str(o['IpRanges']):
                             result = False
@@ -1735,8 +1735,8 @@ def control_4_2_ensure_rdp_not_open_to_world(regions):
         client = boto3.client('ec2', region_name=n)
         response = client.describe_security_groups()
         for m in response['SecurityGroups']:
-            if "0.0.0.0/0" in str(m['IpPermissions']):
-                for o in m['IpPermissions']:
+            for o in m['IpPermissions']:
+                if "0.0.0.0/0" in str(o['IpRanges']):
                     try:
                         if int(o['FromPort']) <= 3389 <= int(o['ToPort']) and '0.0.0.0/0' in str(o['IpRanges']):
                             result = False
