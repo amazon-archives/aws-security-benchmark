@@ -1017,7 +1017,7 @@ def control_2_7_ensure_cloudtrail_encryption_kms(cloudtrails):
     result = True
     failReason = ""
     offenders = []
-    control = "2.6"
+    control = "2.7"
     description = "Ensure CloudTrail logs are encrypted at rest using KMS CMKs"
     scored = True
     for m, n in cloudtrails.iteritems():
