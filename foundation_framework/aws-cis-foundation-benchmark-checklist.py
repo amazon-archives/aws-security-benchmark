@@ -1093,7 +1093,7 @@ def control_3_1_ensure_log_metric_filter_unauthorized_api_calls(cloudtrails):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
                                 MetricName=p['metricTransformations'][0]['metricName'],
-                                Namespace="CloudTrailMetrics"
+                                Namespace=p['metricTransformations'][0]['metricNamespace']
                             )
                             snsClient = boto3.client('sns', region_name=m)
                             subscribers = snsClient.list_subscriptions_by_topic(
@@ -1136,7 +1136,7 @@ def control_3_2_ensure_log_metric_filter_console_signin_no_mfa(cloudtrails):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
                                 MetricName=p['metricTransformations'][0]['metricName'],
-                                Namespace="CloudTrailMetrics"
+                                Namespace=p['metricTransformations'][0]['metricNamespace']
                             )
                             snsClient = boto3.client('sns', region_name=m)
                             subscribers = snsClient.list_subscriptions_by_topic(
@@ -1179,7 +1179,7 @@ def control_3_3_ensure_log_metric_filter_root_usage(cloudtrails):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
                                 MetricName=p['metricTransformations'][0]['metricName'],
-                                Namespace="CloudTrailMetrics"
+                                Namespace=p['metricTransformations'][0]['metricNamespace']
                             )
                             snsClient = boto3.client('sns', region_name=m)
                             subscribers = snsClient.list_subscriptions_by_topic(
@@ -1222,7 +1222,7 @@ def control_3_4_ensure_log_metric_iam_policy_change(cloudtrails):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
                                 MetricName=p['metricTransformations'][0]['metricName'],
-                                Namespace="CloudTrailMetrics"
+                                Namespace=p['metricTransformations'][0]['metricNamespace']
                             )
                             snsClient = boto3.client('sns', region_name=m)
                             subscribers = snsClient.list_subscriptions_by_topic(
@@ -1265,7 +1265,7 @@ def control_3_5_ensure_log_metric_cloudtrail_configuration_changes(cloudtrails):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
                                 MetricName=p['metricTransformations'][0]['metricName'],
-                                Namespace="CloudTrailMetrics"
+                                Namespace=p['metricTransformations'][0]['metricNamespace']
                             )
                             snsClient = boto3.client('sns', region_name=m)
                             subscribers = snsClient.list_subscriptions_by_topic(
@@ -1308,7 +1308,7 @@ def control_3_6_ensure_log_metric_console_auth_failures(cloudtrails):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
                                 MetricName=p['metricTransformations'][0]['metricName'],
-                                Namespace="CloudTrailMetrics"
+                                Namespace=p['metricTransformations'][0]['metricNamespace']
                             )
                             snsClient = boto3.client('sns', region_name=m)
                             subscribers = snsClient.list_subscriptions_by_topic(
@@ -1351,7 +1351,7 @@ def control_3_7_ensure_log_metric_disabling_scheduled_delete_of_kms_cmk(cloudtra
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
                                 MetricName=p['metricTransformations'][0]['metricName'],
-                                Namespace="CloudTrailMetrics"
+                                Namespace=p['metricTransformations'][0]['metricNamespace']
                             )
                             snsClient = boto3.client('sns', region_name=m)
                             subscribers = snsClient.list_subscriptions_by_topic(
@@ -1394,7 +1394,7 @@ def control_3_8_ensure_log_metric_s3_bucket_policy_changes(cloudtrails):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
                                 MetricName=p['metricTransformations'][0]['metricName'],
-                                Namespace="CloudTrailMetrics"
+                                Namespace=p['metricTransformations'][0]['metricNamespace']
                             )
                             snsClient = boto3.client('sns', region_name=m)
                             subscribers = snsClient.list_subscriptions_by_topic(
@@ -1437,7 +1437,7 @@ def control_3_9_ensure_log_metric_config_configuration_changes(cloudtrails):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
                                 MetricName=p['metricTransformations'][0]['metricName'],
-                                Namespace="CloudTrailMetrics"
+                                Namespace=p['metricTransformations'][0]['metricNamespace']
                             )
                             snsClient = boto3.client('sns', region_name=m)
                             subscribers = snsClient.list_subscriptions_by_topic(
@@ -1480,7 +1480,7 @@ def control_3_10_ensure_log_metric_security_group_changes(cloudtrails):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
                                 MetricName=p['metricTransformations'][0]['metricName'],
-                                Namespace="CloudTrailMetrics"
+                                Namespace=p['metricTransformations'][0]['metricNamespace']
                             )
                             snsClient = boto3.client('sns', region_name=m)
                             subscribers = snsClient.list_subscriptions_by_topic(
@@ -1523,7 +1523,7 @@ def control_3_11_ensure_log_metric_nacl(cloudtrails):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
                                 MetricName=p['metricTransformations'][0]['metricName'],
-                                Namespace="CloudTrailMetrics"
+                                Namespace=p['metricTransformations'][0]['metricNamespace']
                             )
                             snsClient = boto3.client('sns', region_name=m)
                             subscribers = snsClient.list_subscriptions_by_topic(
@@ -1566,7 +1566,7 @@ def control_3_12_ensure_log_metric_changes_to_network_gateways(cloudtrails):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
                                 MetricName=p['metricTransformations'][0]['metricName'],
-                                Namespace="CloudTrailMetrics"
+                                Namespace=p['metricTransformations'][0]['metricNamespace']
                             )
                             snsClient = boto3.client('sns', region_name=m)
                             subscribers = snsClient.list_subscriptions_by_topic(
@@ -1609,7 +1609,7 @@ def control_3_13_ensure_log_metric_changes_to_route_tables(cloudtrails):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
                                 MetricName=p['metricTransformations'][0]['metricName'],
-                                Namespace="CloudTrailMetrics"
+                                Namespace=p['metricTransformations'][0]['metricNamespace']
                             )
                             snsClient = boto3.client('sns', region_name=m)
                             subscribers = snsClient.list_subscriptions_by_topic(
@@ -1652,7 +1652,7 @@ def control_3_14_ensure_log_metric_changes_to_vpc(cloudtrails):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
                                 MetricName=p['metricTransformations'][0]['metricName'],
-                                Namespace="CloudTrailMetrics"
+                                Namespace=p['metricTransformations'][0]['metricNamespace']
                             )
                             snsClient = boto3.client('sns', region_name=m)
                             subscribers = snsClient.list_subscriptions_by_topic(
