@@ -24,19 +24,10 @@ from datetime import datetime
 import boto3
 
 
-# CONSTANTS used in validation
+# --- Script controls ---
 
-# CIS Benchmark version referenced
+# CIS Benchmark version referenced. Only used in web report.
 AWS_CIS_BENCHMARK_VERSION = "1.1"
-
-# Control 1.1 - Days allowed since use of root account.
-CONTROL_1_1_DAYS = 0
-
-# Control 1.18 - IAM manager and master role names <Not implemented yet>
-IAM_MASTER = "iam_master"
-IAM_MANAGER = "iam_manager"
-IAM_MASTER_POLICY = "iam_master_policy"
-IAM_MANAGER_POLICY = "iam_manager_policy"
 
 # Would you like a HTML file generated with the result?
 # This file will be delivered using a signed URL.
@@ -46,17 +37,34 @@ S3_WEB_REPORT = True
 # Make sure to update permissions for the Lambda role if you change bucket name.
 S3_WEB_REPORT_BUCKET = "cr-cis-report"
 
+# Create separate report files?
+# This will add date and account number as prefix. Example: cis_report_111111111111_161220_1213.html
+S3_WEB_REPORT_NAME_DETAILS = True
+
 # How many hours should the report be available? Default = 168h/7days
 S3_WEB_REPORT_EXPIRE = "168"
 
 # Set to true if you wish to anonymize the account number in the report.
 # This is mostly used for demo/sharing purposes.
-S3_WEB_REPORT_OBFUSCATE_ACCOUNT = True
+S3_WEB_REPORT_OBFUSCATE_ACCOUNT = False
 
 # Would you like to print the results as JSON to output?
 SCRIPT_OUTPUT_JSON = True
 
 
+# --- Control Parameters ---
+
+# Control 1.18 - IAM manager and master role names <Not implemented yet>
+IAM_MASTER = "iam_master"
+IAM_MANAGER = "iam_manager"
+IAM_MASTER_POLICY = "iam_master_policy"
+IAM_MANAGER_POLICY = "iam_manager_policy"
+
+# Control 1.1 - Days allowed since use of root account.
+CONTROL_1_1_DAYS = 0
+
+
+# --- Global ---
 IAM_CLIENT = boto3.client('iam')
 S3_CLIENT = boto3.client('s3')
 EC2_CLIENT = boto3.client('ec2')
@@ -1017,7 +1025,7 @@ def control_2_7_ensure_cloudtrail_encryption_kms(cloudtrails):
     result = True
     failReason = ""
     offenders = []
-    control = "2.7"
+    control = "2.6"
     description = "Ensure CloudTrail logs are encrypted at rest using KMS CMKs"
     scored = True
     for m, n in cloudtrails.iteritems():
@@ -1943,6 +1951,19 @@ def get_cloudtrails(regions):
         trails[n] = response['trailList']
     return trails
 
+def get_account_number():
+    """Summary
+    
+    Returns:
+        TYPE: Description
+    """
+    if S3_WEB_REPORT_OBFUSCATE_ACCOUNT is False:
+        client = boto3.client("sts")
+        account = client.get_caller_identity()["Account"]
+    else:
+        account = "111111111111"
+    return account
+
 
 def set_evaluation(invokeEvent, mainEvent, annotation):
     """Summary
@@ -1982,7 +2003,7 @@ def set_evaluation(invokeEvent, mainEvent, annotation):
             )
 
 
-def json2html(controlResult):
+def json2html(controlResult, account):
     """Summary
 
     Args:
@@ -1995,6 +2016,7 @@ def json2html(controlResult):
     shortReport = shortAnnotation(controlResult)
     table.append("<html>\n<head>\n<style>\n\n.table-outer {\n    background-color: #eaeaea;\n    border: 3px solid darkgrey;\n}\n\n.table-inner {\n    background-color: white;\n    border: 3px solid darkgrey;\n}\n\n.table-hover tr{\nbackground: transparent;\n}\n\n.table-hover tr:hover {\nbackground-color: lightgrey;\n}\n\ntable, tr, td, th{\n    line-height: 1.42857143;\n    vertical-align: top;\n    border: 1px solid darkgrey;\n    border-spacing: 0;\n    border-collapse: collapse;\n    width: auto;\n    max-width: auto;\n    background-color: transparent;\n    padding: 5px;\n}\n\ntable th {\n    padding-right: 20px;\n    text-align: left;\n}\n\ntd {\n    width:100%;\n}\n\ndiv.centered\n{\n  position: absolute;\n  width: auto;\n  height: auto;\n  z-index: 15;\n  top: 10%;\n  left: 20%;\n  right: 20%;\n  background: white;\n}\n\ndiv.centered table\n{\n    margin: auto;\n    text-align: left;\n}\n</style>\n</head>\n<body>\n<h1 style=\"text-align: center;\">AWS CIS Foundation Framework</h1>\n<div class=\"centered\">")
     table.append("<table class=\"table table-inner\">")
+    table.append("<tr><td>Account: "+account+"</td></tr>")
     table.append("<tr><td>Report date: "+time.strftime("%c")+"</td></tr>")
     table.append("<tr><td>Benchmark version: "+AWS_CIS_BENCHMARK_VERSION+"</td></tr>")
     table.append("<tr><td>Whitepaper location: <a href=\"https://d0.awsstatic.com/whitepapers/compliance/AWS_CIS_Foundations_Benchmark.pdf\" target=\"_blank\">https://d0.awsstatic.com/whitepapers/compliance/AWS_CIS_Foundations_Benchmark.pdf</a></td></tr>")
@@ -2026,7 +2048,7 @@ def json2html(controlResult):
     return table
 
 
-def s3report(htmlReport):
+def s3report(htmlReport, account):
     """Summary
 
     Args:
@@ -2035,12 +2057,16 @@ def s3report(htmlReport):
     Returns:
         TYPE: Description
     """
+    if S3_WEB_REPORT_NAME_DETAILS is True:
+        reportName = "cis_report_"+ str(account)+"_"+str(datetime.now().strftime('%Y%m%d_%H%M'))+".html"
+    else:
+        reportName ="cis_report.html"
     with tempfile.NamedTemporaryFile() as f:
         for item in htmlReport:
             f.write(item)
             f.flush()
         try:
-            S3_CLIENT.upload_file(f.name, S3_WEB_REPORT_BUCKET, 'report.html')
+            S3_CLIENT.upload_file(f.name, S3_WEB_REPORT_BUCKET, reportName)
         except Exception, e:
             return "Failed to upload report to S3 because: " + str(e)
     ttl = int(S3_WEB_REPORT_EXPIRE) * 60
@@ -2048,7 +2074,7 @@ def s3report(htmlReport):
         'get_object',
         Params={
             'Bucket': S3_WEB_REPORT_BUCKET,
-            'Key': 'report.html'
+            'Key': reportName
         },
         ExpiresIn=ttl)
     return signedURL
@@ -2137,6 +2163,7 @@ def lambda_handler(event, context):
     cred_report = get_cred_report()
     password_policy = get_account_password_policy()
     cloud_trails = get_cloudtrails(region_list)
+    accountNumber = get_account_number()
 
     # Run individual controls.
     # Comment out unwanted controls
@@ -2213,11 +2240,11 @@ def lambda_handler(event, context):
 
     # Create HTML report file if enabled
     if S3_WEB_REPORT:
-        htmlReport = json2html(controls)
+        htmlReport = json2html(controls, accountNumber)
         if S3_WEB_REPORT_OBFUSCATE_ACCOUNT:
             for n, _ in enumerate(htmlReport):
                 htmlReport[n] = re.sub(r"\d{12}", "111111111111", htmlReport[n])
-        signedURL = s3report(htmlReport)
+        signedURL = s3report(htmlReport, accountNumber)
         print("SignedURL:\n"+signedURL)
 
     # Report back to Config if we detected that the script is initiated from Config Rules
