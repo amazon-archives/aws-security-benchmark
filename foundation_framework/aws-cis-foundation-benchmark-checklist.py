@@ -100,7 +100,7 @@ def control_1_1_root_use(credreport):
             failReason = "Used within 24h"
             result = False
     except:
-        if credreport[0]['password_last_used'] == "N/A":
+        if credreport[0]['password_last_used'] == "N/A" or "no_information":
             pass
         else:
             print("Something went wrong")
@@ -111,7 +111,7 @@ def control_1_1_root_use(credreport):
             failReason = "Used within 24h"
             result = False
     except:
-        if credreport[0]['access_key_1_last_used_date'] == "N/A":
+        if credreport[0]['access_key_1_last_used_date'] == "N/A" or "no_information":
             pass
         else:
             print("Something went wrong")
@@ -121,7 +121,7 @@ def control_1_1_root_use(credreport):
             failReason = "Used within 24h"
             result = False
     except:
-        if credreport[0]['access_key_2_last_used_date'] == "N/A":
+        if credreport[0]['access_key_2_last_used_date'] == "N/A" or "no_information":
             pass
         else:
             print("Something went wrong")
