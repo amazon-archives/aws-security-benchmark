@@ -35,7 +35,7 @@ S3_WEB_REPORT = True
 
 # Where should the report be delivered to?
 # Make sure to update permissions for the Lambda role if you change bucket name.
-S3_WEB_REPORT_BUCKET = "cr-cis-report"
+S3_WEB_REPORT_BUCKET = "CHANGE_ME_TO_YOUR_S3_BUCKET"
 
 # Create separate report files?
 # This will add date and account number as prefix. Example: cis_report_111111111111_161220_1213.html
