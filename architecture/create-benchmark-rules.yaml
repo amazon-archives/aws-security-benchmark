@@ -39,11 +39,35 @@
         EnableCloudWatchAlarms:
           default: Enable CloudWatch Rules
         NotificationEmailAddressForCloudWatchAlarms: 
-          default: Notification Address
-
+          default: Notification Address 
+   #==================================================
+  # Parameters
+  #================================================== 
+  Mappings: 
+    RegionMap: 
+      us-east-1: 
+        storage: "GLACIER"
+      us-east-2: 
+        storage: "GLACIER"
+      us-west-1: 
+        storage: "GLACIER"
+      ca-central-1: 
+        storage: "GLACIER"    
+      us-west-2: 
+        storage: "GLACIER"
+      eu-west-1: 
+        storage: "GLACIER"
+      sa-east-1: 
+        storage: "GLACIER"
+      ap-southeast-1: 
+        storage: "STANDARD_IA"
+      ap-southeast-2: 
+        storage: "GLACIER"
+      ap-northeast-1: 
+        storage: "GLACIER"
   #==================================================
   # Parameters
-  #==================================================
+  #================================================== 
   Parameters: 
     EnableConfig: 
       Description: Enables Config if it is not already enabled and creates Config Rules. If Config is already enabled, then only the Config Rules will be created.
@@ -114,7 +138,8 @@
               ExpirationInDays: "365"
               Transition: 
                 TransitionInDays: "90"
-                StorageClass: "GLACIER"
+                StorageClass: 
+                  !FindInMap [RegionMap, !Ref "AWS::Region", storage]
         VersioningConfiguration: 
           Status: "Enabled"
 
