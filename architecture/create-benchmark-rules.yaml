@@ -1,6 +1,5 @@
 ---
   
-<<<<<<< HEAD
   #====================================================================================================
   # AWS CloudFormation template for establishing CIS AWS 1.1 benchmark governance rules 
   # Download the benchmarks here: https://benchmarks.cisecurity.org/en-us/?route=downloads.form.awsfoundations.110
@@ -21,11 +20,10 @@
   #      Precondition 3: Lambda must be supported in the region where this template will be launched. See this page for region support:
   #                      https://aws.amazon.com/about-aws/global-infrastructure/regional-product-services/
   #====================================================================================================
-=======
+
   #==================================================
   # CloudFormation Template for establishing CIS AWS 1.1 benchmark governance rules 
   #==================================================
->>>>>>> f89a6da7d2b0122a88438efd6939c72c70a3409d
 
   AWSTemplateFormatVersion: "2010-09-09"
   Description: "Establishes a baseline set of security controls"
