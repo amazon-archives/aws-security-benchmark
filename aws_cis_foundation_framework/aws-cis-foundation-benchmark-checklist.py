@@ -24,19 +24,10 @@ from datetime import datetime
 import boto3
 
 
-# CONSTANTS used in validation
+# --- Script controls ---
 
-# CIS Benchmark version referenced
+# CIS Benchmark version referenced. Only used in web report.
 AWS_CIS_BENCHMARK_VERSION = "1.1"
-
-# Control 1.1 - Days allowed since use of root account.
-CONTROL_1_1_DAYS = 0
-
-# Control 1.18 - IAM manager and master role names <Not implemented yet>
-IAM_MASTER = "iam_master"
-IAM_MANAGER = "iam_manager"
-IAM_MASTER_POLICY = "iam_master_policy"
-IAM_MANAGER_POLICY = "iam_manager_policy"
 
 # Would you like a HTML file generated with the result?
 # This file will be delivered using a signed URL.
@@ -44,19 +35,36 @@ S3_WEB_REPORT = True
 
 # Where should the report be delivered to?
 # Make sure to update permissions for the Lambda role if you change bucket name.
-S3_WEB_REPORT_BUCKET = "cr-cis-report"
+S3_WEB_REPORT_BUCKET = "CHANGE_ME_TO_YOUR_S3_BUCKET"
+
+# Create separate report files?
+# This will add date and account number as prefix. Example: cis_report_111111111111_161220_1213.html
+S3_WEB_REPORT_NAME_DETAILS = True
 
 # How many hours should the report be available? Default = 168h/7days
 S3_WEB_REPORT_EXPIRE = "168"
 
 # Set to true if you wish to anonymize the account number in the report.
 # This is mostly used for demo/sharing purposes.
-S3_WEB_REPORT_OBFUSCATE_ACCOUNT = True
+S3_WEB_REPORT_OBFUSCATE_ACCOUNT = False
 
 # Would you like to print the results as JSON to output?
 SCRIPT_OUTPUT_JSON = True
 
 
+# --- Control Parameters ---
+
+# Control 1.18 - IAM manager and master role names <Not implemented yet>
+IAM_MASTER = "iam_master"
+IAM_MANAGER = "iam_manager"
+IAM_MASTER_POLICY = "iam_master_policy"
+IAM_MANAGER_POLICY = "iam_manager_policy"
+
+# Control 1.1 - Days allowed since use of root account.
+CONTROL_1_1_DAYS = 0
+
+
+# --- Global ---
 IAM_CLIENT = boto3.client('iam')
 S3_CLIENT = boto3.client('s3')
 EC2_CLIENT = boto3.client('ec2')
@@ -92,7 +100,7 @@ def control_1_1_root_use(credreport):
             failReason = "Used within 24h"
             result = False
     except:
-        if credreport[0]['password_last_used'] == "N/A":
+        if credreport[0]['password_last_used'] == "N/A" or "no_information":
             pass
         else:
             print("Something went wrong")
@@ -103,7 +111,7 @@ def control_1_1_root_use(credreport):
             failReason = "Used within 24h"
             result = False
     except:
-        if credreport[0]['access_key_1_last_used_date'] == "N/A":
+        if credreport[0]['access_key_1_last_used_date'] == "N/A" or "no_information":
             pass
         else:
             print("Something went wrong")
@@ -113,7 +121,7 @@ def control_1_1_root_use(credreport):
             failReason = "Used within 24h"
             result = False
     except:
-        if credreport[0]['access_key_2_last_used_date'] == "N/A":
+        if credreport[0]['access_key_2_last_used_date'] == "N/A" or "no_information":
             pass
         else:
             print("Something went wrong")
@@ -236,9 +244,10 @@ def control_1_4_rotated_keys(credreport):
             except:
                 pass
             try:
-                delta = datetime.strptime(credreport[i]['access_key_1_last_used_date'], frm) - datetime.strptime(credreport[i]['access_key_1_last_rotated'], frm)
-                # Verify keys have been used since rotation. Give 1 day buffer.
-                if delta.days > 1:
+                last_used_datetime = datetime.strptime(credreport[i]['access_key_1_last_used_date'], frm)
+                last_rotated_datetime = datetime.strptime(credreport[i]['access_key_1_last_rotated'], frm)
+                # Verify keys have been used since rotation.
+                if last_used_datetime < last_rotated_datetime:
                     result = False
                     failReason = "Key rotation >90 days or not used since rotation"
                     offenders.append(str(credreport[i]['arn']) + ":unused key1")
@@ -255,9 +264,10 @@ def control_1_4_rotated_keys(credreport):
             except:
                 pass
             try:
-                delta = datetime.strptime(credreport[i]['access_key_2_last_used_date'], frm) - datetime.strptime(credreport[i]['access_key_2_last_rotated'], frm)
-                # Verify keys have been used since rotation. Give 1 day buffer.
-                if delta.days > 1:
+                last_used_datetime = datetime.strptime(credreport[i]['access_key_2_last_used_date'], frm)
+                last_rotated_datetime = datetime.strptime(credreport[i]['access_key_2_last_rotated'], frm)
+                # Verify keys have been used since rotation.
+                if last_used_datetime < last_rotated_datetime:
                     result = False
                     failReason = "Key rotation >90 days or not used since rotation"
                     offenders.append(str(credreport[i]['arn']) + ":unused key2")
@@ -282,9 +292,13 @@ def control_1_5_password_policy_uppercase(passwordpolicy):
     control = "1.5"
     description = "Ensure IAM password policy requires at least one uppercase letter"
     scored = True
-    if passwordpolicy['RequireUppercaseCharacters'] is False:
+    if passwordpolicy is False:
         result = False
-        failReason = "Password policy does not require at least one uppercase letter"
+        failReason = "Account does not have a IAM password policy."
+    else:
+        if passwordpolicy['RequireUppercaseCharacters'] is False:
+            result = False
+            failReason = "Password policy does not require at least one uppercase letter"
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
 
 
@@ -304,9 +318,13 @@ def control_1_6_password_policy_lowercase(passwordpolicy):
     control = "1.6"
     description = "Ensure IAM password policy requires at least one lowercase letter"
     scored = True
-    if passwordpolicy['RequireLowercaseCharacters'] is False:
+    if passwordpolicy is False:
         result = False
-        failReason = "Password policy does not require at least one uppercase letter"
+        failReason = "Account does not have a IAM password policy."
+    else:
+        if passwordpolicy['RequireLowercaseCharacters'] is False:
+            result = False
+            failReason = "Password policy does not require at least one uppercase letter"
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
 
 
@@ -326,9 +344,13 @@ def control_1_7_password_policy_symbol(passwordpolicy):
     control = "1.7"
     description = "Ensure IAM password policy requires at least one symbol"
     scored = True
-    if passwordpolicy['RequireSymbols'] is False:
+    if passwordpolicy is False:
         result = False
-        failReason = "Password policy does not require at least one symbol"
+        failReason = "Account does not have a IAM password policy."
+    else:
+        if passwordpolicy['RequireSymbols'] is False:
+            result = False
+            failReason = "Password policy does not require at least one symbol"
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
 
 
@@ -348,9 +370,13 @@ def control_1_8_password_policy_number(passwordpolicy):
     control = "1.8"
     description = "Ensure IAM password policy requires at least one number"
     scored = True
-    if passwordpolicy['RequireNumbers'] is False:
+    if passwordpolicy is False:
         result = False
-        failReason = "Password policy does not require at least one number"
+        failReason = "Account does not have a IAM password policy."
+    else:
+        if passwordpolicy['RequireNumbers'] is False:
+            result = False
+            failReason = "Password policy does not require at least one number"
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
 
 
@@ -370,9 +396,13 @@ def control_1_9_password_policy_length(passwordpolicy):
     control = "1.9"
     description = "Ensure IAM password policy requires minimum length of 14 or greater"
     scored = True
-    if passwordpolicy['MinimumPasswordLength'] < 14:
+    if passwordpolicy is False:
         result = False
-        failReason = "Password policy does not require at least 14 characters"
+        failReason = "Account does not have a IAM password policy."
+    else:
+        if passwordpolicy['MinimumPasswordLength'] < 14:
+            result = False
+            failReason = "Password policy does not require at least 14 characters"
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
 
 
@@ -392,15 +422,19 @@ def control_1_10_password_policy_reuse(passwordpolicy):
     control = "1.10"
     description = "Ensure IAM password policy prevents password reuse"
     scored = True
-    try:
-        if passwordpolicy['PasswordReusePrevention'] == 24:
-            pass
-        else:
+    if passwordpolicy is False:
+        result = False
+        failReason = "Account does not have a IAM password policy."
+    else:
+        try:
+            if passwordpolicy['PasswordReusePrevention'] == 24:
+                pass
+            else:
+                result = False
+                failReason = "Password policy does not prevent reusing last 24 passwords"
+        except:
             result = False
             failReason = "Password policy does not prevent reusing last 24 passwords"
-    except:
-        result = False
-        failReason = "Password policy does not prevent reusing last 24 passwords"
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
 
 
@@ -420,13 +454,17 @@ def control_1_11_password_policy_expire(passwordpolicy):
     control = "1.11"
     description = "Ensure IAM password policy expires passwords within 90 days or less"
     scored = True
-    if passwordpolicy['ExpirePasswords'] is True:
-        if 0 < passwordpolicy['MaxPasswordAge'] > 90:
+    if passwordpolicy is False:
+        result = False
+        failReason = "Account does not have a IAM password policy."
+    else:
+        if passwordpolicy['ExpirePasswords'] is True:
+            if 0 < passwordpolicy['MaxPasswordAge'] > 90:
+                result = False
+                failReason = "Password policy does not expire passwords after 90 days or less"
+        else:
             result = False
             failReason = "Password policy does not expire passwords after 90 days or less"
-    else:
-        result = False
-        failReason = "Password policy does not expire passwords after 90 days or less"
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
 
 
@@ -719,10 +757,21 @@ def control_1_24_no_overly_permissive_policies():
             PolicyArn=m['Arn'],
             VersionId=m['DefaultVersionId']
         )
-        for n in policy['PolicyVersion']['Document']['Statement']:
-            if n['Action'] == "*" and n['Resource'] == "*":
-                failReason = "Found full administrative policy"
-                offenders.append(str(m['Arn']))
+
+        statements = []
+        # a policy may contain a single statement, a single statement in an array, or multiple statements in an array
+        if isinstance(policy['PolicyVersion']['Document']['Statement'], list):
+            for statement in policy['PolicyVersion']['Document']['Statement']:
+                statements.append(statement)
+        else:
+            statements.append(policy['PolicyVersion']['Document']['Statement'])
+
+        for n in statements:
+            # a policy statement has to contain either an Action or a NotAction
+            if 'Action' in n.keys() and n['Effect'] == 'Allow':
+                if ("'*'" in str(n['Action']) or str(n['Action']) == "*") and ("'*'" in str(n['Resource']) or str(n['Resource']) == "*"):
+                    failReason = "Found full administrative policy"
+                    offenders.append(str(m['Arn']))
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
 
 
@@ -804,14 +853,20 @@ def control_2_3_ensure_cloudtrail_bucket_not_public(cloudtrails):
     scored = True
     for m, n in cloudtrails.iteritems():
         for o in n:
-            response = S3_CLIENT.get_bucket_acl(
-                Bucket=o['S3BucketName']
-            )
+            # it is possible to have a cloudtrail configured with a nonexistant bucket
+            try:
+                response = S3_CLIENT.get_bucket_acl(
+                    Bucket=o['S3BucketName']
+                )
+            except:
+                result = False
+                failReason = "Cloudtrail not configured to log to S3. "
+                offenders.append(str(o['TrailARN']))
             for p in range(len(response['Grants'])):
                 try:
                     if re.search(r'(AllUsers|AuthenticatedUsers)', response['Grants'][p]['Grantee']['URI']):
                         result = False
-                        failReason = "Publically accessible CloudTrail bucket discovered"
+                        failReason = failReason + "Publically accessible CloudTrail bucket discovered"
                         offenders.append(str(o['TrailARN']))
                 except:
                     pass
@@ -938,15 +993,21 @@ def control_2_6_ensure_cloudtrail_bucket_logging(cloudtrails):
     scored = True
     for m, n in cloudtrails.iteritems():
         for o in n:
-            response = S3_CLIENT.get_bucket_logging(
-                Bucket=o['S3BucketName']
-            )
+            # it is possible to have a cloudtrail configured with a nonexistant bucket
+            try:
+                response = S3_CLIENT.get_bucket_logging(
+                  Bucket=o['S3BucketName']
+                )
+            except:
+                result = False
+                failReason = "Cloudtrail not configured to log to S3. "
+                offenders.append(str(o['TrailARN']))
             try:
                 if response['LoggingEnabled']:
                     pass
             except:
                 result = False
-                failReason = "CloudTrail S3 bucket without logging discovered"
+                failReason = failReason + "CloudTrail S3 bucket without logging discovered"
                 offenders.append("Trail:" + str(o['TrailARN']) + " - S3Bucket:" + str(o['S3BucketName']))
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
 
@@ -1003,7 +1064,7 @@ def control_2_8_ensure_kms_cmk_rotation(regions):
                     keyDescription = kms_client.describe_key(KeyId=keys['Keys'][i]['KeyId'])
                     if "Default master key that protects my" not in keyDescription['KeyMetadata']['Description']:  # Ignore service keys
                         result = False
-                        failReason = "CloudTrail not using KMS CMK for encryption discovered"
+                        failReason = "KMS CMK rotation not enabled"
                         offenders.append("Key:" + str(keyDescription['KeyMetadata']['Arn']))
             except:
                 pass  # Ignore keys without permission, for example ACM key
@@ -1040,7 +1101,7 @@ def control_3_1_ensure_log_metric_filter_unauthorized_api_calls(cloudtrails):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
                                 MetricName=p['metricTransformations'][0]['metricName'],
-                                Namespace="CloudTrailMetrics"
+                                Namespace=p['metricTransformations'][0]['metricNamespace']
                             )
                             snsClient = boto3.client('sns', region_name=m)
                             subscribers = snsClient.list_subscriptions_by_topic(
@@ -1083,7 +1144,7 @@ def control_3_2_ensure_log_metric_filter_console_signin_no_mfa(cloudtrails):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
                                 MetricName=p['metricTransformations'][0]['metricName'],
-                                Namespace="CloudTrailMetrics"
+                                Namespace=p['metricTransformations'][0]['metricNamespace']
                             )
                             snsClient = boto3.client('sns', region_name=m)
                             subscribers = snsClient.list_subscriptions_by_topic(
@@ -1126,7 +1187,7 @@ def control_3_3_ensure_log_metric_filter_root_usage(cloudtrails):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
                                 MetricName=p['metricTransformations'][0]['metricName'],
-                                Namespace="CloudTrailMetrics"
+                                Namespace=p['metricTransformations'][0]['metricNamespace']
                             )
                             snsClient = boto3.client('sns', region_name=m)
                             subscribers = snsClient.list_subscriptions_by_topic(
@@ -1169,7 +1230,7 @@ def control_3_4_ensure_log_metric_iam_policy_change(cloudtrails):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
                                 MetricName=p['metricTransformations'][0]['metricName'],
-                                Namespace="CloudTrailMetrics"
+                                Namespace=p['metricTransformations'][0]['metricNamespace']
                             )
                             snsClient = boto3.client('sns', region_name=m)
                             subscribers = snsClient.list_subscriptions_by_topic(
@@ -1212,7 +1273,7 @@ def control_3_5_ensure_log_metric_cloudtrail_configuration_changes(cloudtrails):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
                                 MetricName=p['metricTransformations'][0]['metricName'],
-                                Namespace="CloudTrailMetrics"
+                                Namespace=p['metricTransformations'][0]['metricNamespace']
                             )
                             snsClient = boto3.client('sns', region_name=m)
                             subscribers = snsClient.list_subscriptions_by_topic(
@@ -1255,7 +1316,7 @@ def control_3_6_ensure_log_metric_console_auth_failures(cloudtrails):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
                                 MetricName=p['metricTransformations'][0]['metricName'],
-                                Namespace="CloudTrailMetrics"
+                                Namespace=p['metricTransformations'][0]['metricNamespace']
                             )
                             snsClient = boto3.client('sns', region_name=m)
                             subscribers = snsClient.list_subscriptions_by_topic(
@@ -1298,7 +1359,7 @@ def control_3_7_ensure_log_metric_disabling_scheduled_delete_of_kms_cmk(cloudtra
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
                                 MetricName=p['metricTransformations'][0]['metricName'],
-                                Namespace="CloudTrailMetrics"
+                                Namespace=p['metricTransformations'][0]['metricNamespace']
                             )
                             snsClient = boto3.client('sns', region_name=m)
                             subscribers = snsClient.list_subscriptions_by_topic(
@@ -1341,7 +1402,7 @@ def control_3_8_ensure_log_metric_s3_bucket_policy_changes(cloudtrails):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
                                 MetricName=p['metricTransformations'][0]['metricName'],
-                                Namespace="CloudTrailMetrics"
+                                Namespace=p['metricTransformations'][0]['metricNamespace']
                             )
                             snsClient = boto3.client('sns', region_name=m)
                             subscribers = snsClient.list_subscriptions_by_topic(
@@ -1384,7 +1445,7 @@ def control_3_9_ensure_log_metric_config_configuration_changes(cloudtrails):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
                                 MetricName=p['metricTransformations'][0]['metricName'],
-                                Namespace="CloudTrailMetrics"
+                                Namespace=p['metricTransformations'][0]['metricNamespace']
                             )
                             snsClient = boto3.client('sns', region_name=m)
                             subscribers = snsClient.list_subscriptions_by_topic(
@@ -1427,7 +1488,7 @@ def control_3_10_ensure_log_metric_security_group_changes(cloudtrails):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
                                 MetricName=p['metricTransformations'][0]['metricName'],
-                                Namespace="CloudTrailMetrics"
+                                Namespace=p['metricTransformations'][0]['metricNamespace']
                             )
                             snsClient = boto3.client('sns', region_name=m)
                             subscribers = snsClient.list_subscriptions_by_topic(
@@ -1470,7 +1531,7 @@ def control_3_11_ensure_log_metric_nacl(cloudtrails):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
                                 MetricName=p['metricTransformations'][0]['metricName'],
-                                Namespace="CloudTrailMetrics"
+                                Namespace=p['metricTransformations'][0]['metricNamespace']
                             )
                             snsClient = boto3.client('sns', region_name=m)
                             subscribers = snsClient.list_subscriptions_by_topic(
@@ -1513,7 +1574,7 @@ def control_3_12_ensure_log_metric_changes_to_network_gateways(cloudtrails):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
                                 MetricName=p['metricTransformations'][0]['metricName'],
-                                Namespace="CloudTrailMetrics"
+                                Namespace=p['metricTransformations'][0]['metricNamespace']
                             )
                             snsClient = boto3.client('sns', region_name=m)
                             subscribers = snsClient.list_subscriptions_by_topic(
@@ -1556,7 +1617,7 @@ def control_3_13_ensure_log_metric_changes_to_route_tables(cloudtrails):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
                                 MetricName=p['metricTransformations'][0]['metricName'],
-                                Namespace="CloudTrailMetrics"
+                                Namespace=p['metricTransformations'][0]['metricNamespace']
                             )
                             snsClient = boto3.client('sns', region_name=m)
                             subscribers = snsClient.list_subscriptions_by_topic(
@@ -1599,7 +1660,7 @@ def control_3_14_ensure_log_metric_changes_to_vpc(cloudtrails):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
                                 MetricName=p['metricTransformations'][0]['metricName'],
-                                Namespace="CloudTrailMetrics"
+                                Namespace=p['metricTransformations'][0]['metricNamespace']
                             )
                             snsClient = boto3.client('sns', region_name=m)
                             subscribers = snsClient.list_subscriptions_by_topic(
@@ -1653,12 +1714,12 @@ def control_4_1_ensure_ssh_not_open_to_world(regions):
             if "0.0.0.0/0" in str(m['IpPermissions']):
                 for o in m['IpPermissions']:
                     try:
-                        if int(o['FromPort']) <= 22 <= int(o['ToPort']):
+                        if int(o['FromPort']) <= 22 <= int(o['ToPort']) and '0.0.0.0/0' in str(o['IpRanges']):
                             result = False
                             failReason = "Found Security Group with port 22 open to the world (0.0.0.0/0)"
                             offenders.append(str(m['GroupId']))
                     except:
-                        if str(o['IpProtocol']) == "-1":
+                        if str(o['IpProtocol']) == "-1" and '0.0.0.0/0' in str(o['IpRanges']):
                             result = False
                             failReason = "Found Security Group with port 22 open to the world (0.0.0.0/0)"
                             offenders.append(str(n)+" : "+str(m['GroupId']))
@@ -1685,12 +1746,12 @@ def control_4_2_ensure_rdp_not_open_to_world(regions):
             if "0.0.0.0/0" in str(m['IpPermissions']):
                 for o in m['IpPermissions']:
                     try:
-                        if int(o['FromPort']) <= 3389 <= int(o['ToPort']):
+                        if int(o['FromPort']) <= 3389 <= int(o['ToPort']) and '0.0.0.0/0' in str(o['IpRanges']):
                             result = False
                             failReason = "Found Security Group with port 3389 open to the world (0.0.0.0/0)"
                             offenders.append(str(m['GroupId']))
                     except:
-                        if str(o['IpProtocol']) == "-1":
+                        if str(o['IpProtocol']) == "-1" and '0.0.0.0/0' in str(o['IpRanges']):
                             result = False
                             failReason = "Found Security Group with port 3389 open to the world (0.0.0.0/0)"
                             offenders.append(str(n)+" : "+str(m['GroupId']))
@@ -1715,6 +1776,7 @@ def control_4_3_ensure_flow_logs_enabled_on_all_vpc(regions):
         flowlogs = client.describe_flow_logs(
             #NextToken='string',
             #MaxResults=123
+            # No paginator in boto atm.
         )
         activeLogs = []
         for m in flowlogs['FlowLogs']:
@@ -1857,13 +1919,17 @@ def get_cred_report():
 
 
 def get_account_password_policy():
-    """Summary
+    """Check if a IAM password policy exists, if not return false
 
     Returns:
-        TYPE: Description
+        Account IAM password policy or False
     """
-    response = IAM_CLIENT.get_account_password_policy()
-    return response['PasswordPolicy']
+    try:
+        response = IAM_CLIENT.get_account_password_policy()
+        return response['PasswordPolicy']
+    except Exception as e:
+        if "cannot be found" in str(e):
+            return False
 
 
 def get_regions():
@@ -1884,6 +1950,19 @@ def get_cloudtrails(regions):
         response = client.describe_trails()
         trails[n] = response['trailList']
     return trails
+
+def get_account_number():
+    """Summary
+
+    Returns:
+        TYPE: Description
+    """
+    if S3_WEB_REPORT_OBFUSCATE_ACCOUNT is False:
+        client = boto3.client("sts")
+        account = client.get_caller_identity()["Account"]
+    else:
+        account = "111111111111"
+    return account
 
 
 def set_evaluation(invokeEvent, mainEvent, annotation):
@@ -1924,7 +2003,7 @@ def set_evaluation(invokeEvent, mainEvent, annotation):
             )
 
 
-def json2html(controlResult):
+def json2html(controlResult, account):
     """Summary
 
     Args:
@@ -1937,6 +2016,7 @@ def json2html(controlResult):
     shortReport = shortAnnotation(controlResult)
     table.append("<html>\n<head>\n<style>\n\n.table-outer {\n    background-color: #eaeaea;\n    border: 3px solid darkgrey;\n}\n\n.table-inner {\n    background-color: white;\n    border: 3px solid darkgrey;\n}\n\n.table-hover tr{\nbackground: transparent;\n}\n\n.table-hover tr:hover {\nbackground-color: lightgrey;\n}\n\ntable, tr, td, th{\n    line-height: 1.42857143;\n    vertical-align: top;\n    border: 1px solid darkgrey;\n    border-spacing: 0;\n    border-collapse: collapse;\n    width: auto;\n    max-width: auto;\n    background-color: transparent;\n    padding: 5px;\n}\n\ntable th {\n    padding-right: 20px;\n    text-align: left;\n}\n\ntd {\n    width:100%;\n}\n\ndiv.centered\n{\n  position: absolute;\n  width: auto;\n  height: auto;\n  z-index: 15;\n  top: 10%;\n  left: 20%;\n  right: 20%;\n  background: white;\n}\n\ndiv.centered table\n{\n    margin: auto;\n    text-align: left;\n}\n</style>\n</head>\n<body>\n<h1 style=\"text-align: center;\">AWS CIS Foundation Framework</h1>\n<div class=\"centered\">")
     table.append("<table class=\"table table-inner\">")
+    table.append("<tr><td>Account: "+account+"</td></tr>")
     table.append("<tr><td>Report date: "+time.strftime("%c")+"</td></tr>")
     table.append("<tr><td>Benchmark version: "+AWS_CIS_BENCHMARK_VERSION+"</td></tr>")
     table.append("<tr><td>Whitepaper location: <a href=\"https://d0.awsstatic.com/whitepapers/compliance/AWS_CIS_Foundations_Benchmark.pdf\" target=\"_blank\">https://d0.awsstatic.com/whitepapers/compliance/AWS_CIS_Foundations_Benchmark.pdf</a></td></tr>")
@@ -1968,7 +2048,7 @@ def json2html(controlResult):
     return table
 
 
-def s3report(htmlReport):
+def s3report(htmlReport, account):
     """Summary
 
     Args:
@@ -1977,17 +2057,24 @@ def s3report(htmlReport):
     Returns:
         TYPE: Description
     """
+    if S3_WEB_REPORT_NAME_DETAILS is True:
+        reportName = "cis_report_"+ str(account)+"_"+str(datetime.now().strftime('%Y%m%d_%H%M'))+".html"
+    else:
+        reportName ="cis_report.html"
     with tempfile.NamedTemporaryFile() as f:
         for item in htmlReport:
             f.write(item)
             f.flush()
-        S3_CLIENT.upload_file(f.name, S3_WEB_REPORT_BUCKET, 'report.html')
+        try:
+            S3_CLIENT.upload_file(f.name, S3_WEB_REPORT_BUCKET, reportName)
+        except Exception, e:
+            return "Failed to upload report to S3 because: " + str(e)
     ttl = int(S3_WEB_REPORT_EXPIRE) * 60
     signedURL = S3_CLIENT.generate_presigned_url(
         'get_object',
         Params={
             'Bucket': S3_WEB_REPORT_BUCKET,
-            'Key': 'report.html'
+            'Key': reportName
         },
         ExpiresIn=ttl)
     return signedURL
@@ -2004,9 +2091,10 @@ def json_output(controlResult):
     """
     inner = dict()
     outer = dict()
-    for m, _ in enumerate(controlResult):
+    for m in range(len(controlResult)):
+        inner = dict()
         for n in range(len(controlResult[m])):
-            x = controlResult[m][n]['ControlId'].split('.')[1]
+            x = int(controlResult[m][n]['ControlId'].split('.')[1])
             inner[x] = controlResult[m][n]
         y = controlResult[m][0]['ControlId'].split('.')[0]
         outer[y] = inner
@@ -2075,6 +2163,7 @@ def lambda_handler(event, context):
     cred_report = get_cred_report()
     password_policy = get_account_password_policy()
     cloud_trails = get_cloudtrails(region_list)
+    accountNumber = get_account_number()
 
     # Run individual controls.
     # Comment out unwanted controls
@@ -2151,11 +2240,11 @@ def lambda_handler(event, context):
 
     # Create HTML report file if enabled
     if S3_WEB_REPORT:
-        htmlReport = json2html(controls)
+        htmlReport = json2html(controls, accountNumber)
         if S3_WEB_REPORT_OBFUSCATE_ACCOUNT:
             for n, _ in enumerate(htmlReport):
                 htmlReport[n] = re.sub(r"\d{12}", "111111111111", htmlReport[n])
-        signedURL = s3report(htmlReport)
+        signedURL = s3report(htmlReport, accountNumber)
         print("SignedURL:\n"+signedURL)
 
     # Report back to Config if we detected that the script is initiated from Config Rules

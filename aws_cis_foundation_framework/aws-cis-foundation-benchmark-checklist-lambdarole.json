@@ -8,7 +8,7 @@
         "s3:GetObject",
         "s3:DeleteObject"
       ],
-      "Resource":"arn:aws:s3:::cr-cis-report/*"
+      "Resource":"arn:aws:s3:::CHANGE_ME_TO_YOUR_S3_BUCKET/*"
     },
     {
       "Effect": "Allow",
