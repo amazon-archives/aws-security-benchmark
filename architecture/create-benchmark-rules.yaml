@@ -21,10 +21,6 @@
   #                      https://aws.amazon.com/about-aws/global-infrastructure/regional-product-services/
   #====================================================================================================
 
-  #==================================================
-  # CloudFormation Template for establishing CIS AWS 1.1 benchmark governance rules 
-  #==================================================
-
   AWSTemplateFormatVersion: "2010-09-09"
   Description: "Establishes a baseline set of security controls"
   Metadata: 
