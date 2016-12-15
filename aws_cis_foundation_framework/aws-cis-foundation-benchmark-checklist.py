@@ -20,6 +20,7 @@ import time
 import sys
 import re
 import tempfile
+import getopt
 from datetime import datetime
 import boto3
 
@@ -48,13 +49,17 @@ S3_WEB_REPORT_EXPIRE = "168"
 # This is mostly used for demo/sharing purposes.
 S3_WEB_REPORT_OBFUSCATE_ACCOUNT = False
 
+# Would  you like to send the report signedURL to an SNS topic
+SEND_REPORT_URL_TO_SNS = False
+SNS_TOPIC_ARN = "CHANGE_ME_TO_YOUR_TOPIC_ARN"
+
 # Would you like to print the results as JSON to output?
 SCRIPT_OUTPUT_JSON = True
 
 
 # --- Control Parameters ---
 
-# Control 1.18 - IAM manager and master role names <Not implemented yet>
+# Control 1.18 - IAM manager and master role names <Not implemented yet, under review>
 IAM_MASTER = "iam_master"
 IAM_MANAGER = "iam_manager"
 IAM_MASTER_POLICY = "iam_master_policy"
@@ -67,7 +72,6 @@ CONTROL_1_1_DAYS = 0
 # --- Global ---
 IAM_CLIENT = boto3.client('iam')
 S3_CLIENT = boto3.client('s3')
-EC2_CLIENT = boto3.client('ec2')
 
 
 # --- 1 Identity and Access Management ---
@@ -667,7 +671,8 @@ def control_1_21_ensure_iam_instance_roles_used():
     description = "Ensure IAM instance roles are used for AWS resource access from instances, application code is not audited"
     scored = True
     failReason = "Instance not assigned IAM role for EC2"
-    response = EC2_CLIENT.describe_instances()
+    client = boto3.client('ec2')
+    response = client.describe_instances()
     offenders = []
     for n, _ in enumerate(response['Reservations']):
         try:
@@ -1933,7 +1938,8 @@ def get_account_password_policy():
 
 
 def get_regions():
-    region_response = EC2_CLIENT.describe_regions()
+    client = boto3.client('ec2')
+    region_response = client.describe_regions()
     regions = [region['RegionName'] for region in region_response['Regions']]
     return regions
 
@@ -2134,6 +2140,26 @@ def shortAnnotation(controlResult):
         return "{\"Failed\":"+json.dumps(annotation)+"}"
 
 
+def send_results_to_sns(url):
+    """Summary
+    
+    Args:
+        url (TYPE): SignedURL created by the S3 upload function
+    
+    Returns:
+        TYPE: Description
+    """
+    # Get correct region for the TopicARN
+    region = (SNS_TOPIC_ARN.split("sns:", 1)[1]).split(":", 1)[0]
+    client = boto3.client('sns', region_name=region)
+    client.publish(
+        TopicArn=SNS_TOPIC_ARN,
+        Subject="AWS CIS Benchmark report - "+str(time.strftime("%c")),
+        Message=json.dumps({'default': url}),
+        MessageStructure='json'
+    )
+
+
 def lambda_handler(event, context):
     """Summary
 
@@ -2226,7 +2252,7 @@ def lambda_handler(event, context):
     control4.append(control_4_3_ensure_flow_logs_enabled_on_all_vpc(region_list))
     control4.append(control_4_4_ensure_default_security_groups_restricts_traffic(region_list))
     control4.append(control_4_5_ensure_route_tables_are_least_access(region_list))
-
+    
     # Join results
     controls = []
     controls.append(control1)
@@ -2246,11 +2272,58 @@ def lambda_handler(event, context):
                 htmlReport[n] = re.sub(r"\d{12}", "111111111111", htmlReport[n])
         signedURL = s3report(htmlReport, accountNumber)
         print("SignedURL:\n"+signedURL)
+        if SEND_REPORT_URL_TO_SNS is True:
+            send_results_to_sns(signedURL)
 
     # Report back to Config if we detected that the script is initiated from Config Rules
     if configRule:
         evalAnnotation = shortAnnotation(controls)
         set_evaluation(invokingEvent, event, evalAnnotation)
 
+
 if __name__ == '__main__':
+    profile_name = ''
+    try:
+        opts, args = getopt.getopt(sys.argv[1:],"p:h",["profile=","help"])
+    except getopt.GetoptError:
+        print("Error: Illegal option\n")
+        print("---Usage---")
+        print('Run without parameters to use default profile:')
+        print("python "+sys.argv[0]+"\n")
+        print("Use -p or --profile to specify a specific profile:")
+        print("python "+sys.argv[0]+' -p <profile>')
+        sys.exit(2)
+
+    # Parameter options
+    for opt, arg in opts:
+        if opt in ("-h", "--help"):
+            print("---Help---")
+            print('Run without parameters to use default profile:')
+            print("python "+sys.argv[0]+"\n")
+            print("Use -p or --profile to specify a specific profile:")
+            print("python "+sys.argv[0]+' -p <profile>')
+            sys.exit()
+        elif opt in ("-p", "--profile"):
+            profile_name = arg
+
+
+    # Verify that the profile exist
+    if not profile_name == "":
+        try:
+            boto3.setup_default_session(profile_name=profile_name)
+        except Exception as e:
+            if "could not be found" in str(e):
+                print("Error: "+str(e))
+                print("Please verify your profile name.")
+                sys.exit(2)
+
+    # Test if default region is configured for the used profile, if not we will use us-east-1
+    try:
+        client = boto3.client('ec2')
+    except Exception as e:
+        if "You must specify a region" in str(e):
+            if profile_name == "":
+                boto3.setup_default_session(region_name='us-east-1')
+            else:
+                boto3.setup_default_session(profile_name=profile_name, region_name='us-east-1')
     lambda_handler("test", "test")
