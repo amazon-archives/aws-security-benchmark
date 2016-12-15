@@ -1636,10 +1636,7 @@
         - ResourceForGetCloudTrailCloudWatchLog
       Properties: 
         LogGroupName: !GetAtt ResourceForGetCloudTrailCloudWatchLog.LogName
-        FilterPattern: "{
-            ($.errorCode = AccessDenied) ||
-            ($.errorCode = UnauthorizedOperation)
-            }"
+        FilterPattern: "{ ($.errorCode = \"*UnauthorizedOperation\") || ($.errorCode = \"AccessDenied*\") }"
         MetricTransformations: 
           - 
             MetricNamespace: "CloudTrailMetrics"
