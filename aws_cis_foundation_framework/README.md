@@ -34,4 +34,4 @@ Specify profile by using the -p or --profile
 
 ## IAM Policy
 The IAM policy required to run the script is located in the file  
-```aws-cis-foundation-benchmark-checklist-lambdarole.json```
+```aws-cis-foundation-benchmark-checklist-lambdarole.json```  
