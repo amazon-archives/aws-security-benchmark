@@ -207,7 +207,7 @@
           RequireLowercaseCharacters: true
           RequireSymbols: true
           RequireNumbers: true
-          MinimumPasswordLength: 8
+          MinimumPasswordLength: 14
           PasswordReusePrevention: 24
           MaxPasswordAge: 90
         Source: 
