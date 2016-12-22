@@ -2104,14 +2104,8 @@ def json_output(controlResult):
             inner[x] = controlResult[m][n]
         y = controlResult[m][0]['ControlId'].split('.')[0]
         outer[y] = inner
-    print("JSON output:")
-    print("-------------------------------------------------------")
+    outer['summary'] = shortAnnotation(controlResult)
     print(json.dumps(outer, sort_keys=True, indent=4, separators=(',', ': ')))
-    print("-------------------------------------------------------")
-    print("\n")
-    print("Summary:")
-    print(shortAnnotation(controlResult))
-    print("\n")
     return 0
 
 
@@ -2142,10 +2136,10 @@ def shortAnnotation(controlResult):
 
 def send_results_to_sns(url):
     """Summary
-    
+
     Args:
         url (TYPE): SignedURL created by the S3 upload function
-    
+
     Returns:
         TYPE: Description
     """
@@ -2252,7 +2246,7 @@ def lambda_handler(event, context):
     control4.append(control_4_3_ensure_flow_logs_enabled_on_all_vpc(region_list))
     control4.append(control_4_4_ensure_default_security_groups_restricts_traffic(region_list))
     control4.append(control_4_5_ensure_route_tables_are_least_access(region_list))
-    
+
     # Join results
     controls = []
     controls.append(control1)
