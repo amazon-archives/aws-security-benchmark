@@ -47,7 +47,6 @@
   #==================================================
   Parameters:
     ProfileLevel: 
-    ProfileLevel: 
       Description: "Level 1 controls are baseline governance controls, whereas Level 2 controls represent redundant or stricter governance controls. See the control list here for guidance: https://benchmarks.cisecurity.org/en-us/?route=downloads.form.awsfoundations.110"
       Type: String
       Default: "Level 2"
@@ -1352,6 +1351,7 @@
 
     ConfigPermissionToCallEvaluateKeyRotationLambda: 
       Type: AWS::Lambda::Permission
+      Condition: IsLevel2
       DependsOn: FunctionForEvaluateKeyRotationRule
       Properties: 
         FunctionName: !GetAtt FunctionForEvaluateKeyRotationRule.Arn
@@ -1360,6 +1360,7 @@
 
     ConfigRuleForEvaluateKeyRotations: 
       Type: AWS::Config::ConfigRule
+      Condition: IsLevel2
       DependsOn: 
         - FunctionForEvaluateKeyRotationRule
         - ConfigPermissionToCallEvaluateKeyRotationLambda
@@ -1379,7 +1380,6 @@
     #==================================================
     FunctionForEvaluateConfigInAllRegionsRule:
       Type: "AWS::Lambda::Function"
-      Condition: IsLevel2
       DependsOn: 
         - MasterConfigRole
         - ResourceForEvaluateCisBenchmarkingPreconditions
@@ -1456,7 +1456,6 @@
         
     EvaluateConfigInAllRegionsFunctionPermission: 
       Type: AWS::Lambda::Permission
-      Condition: IsLevel2
       DependsOn: FunctionForEvaluateConfigInAllRegionsRule
       Properties: 
         FunctionName: !GetAtt FunctionForEvaluateConfigInAllRegionsRule.Arn
