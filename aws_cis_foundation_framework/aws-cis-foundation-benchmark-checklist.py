@@ -863,18 +863,19 @@ def control_2_3_ensure_cloudtrail_bucket_not_public(cloudtrails):
                 response = S3_CLIENT.get_bucket_acl(
                     Bucket=o['S3BucketName']
                 )
+                for p in range(len(response['Grants'])):
+                    try:
+                        if re.search(r'(AllUsers|AuthenticatedUsers)', response['Grants'][p]['Grantee']['URI']):
+                            result = False
+                            failReason = failReason + "Publically accessible CloudTrail bucket discovered"
+                            offenders.append(str(o['TrailARN']))
+                    except:
+                        pass
             except:
                 result = False
                 failReason = "Cloudtrail not configured to log to S3. "
                 offenders.append(str(o['TrailARN']))
-            for p in range(len(response['Grants'])):
-                try:
-                    if re.search(r'(AllUsers|AuthenticatedUsers)', response['Grants'][p]['Grantee']['URI']):
-                        result = False
-                        failReason = failReason + "Publically accessible CloudTrail bucket discovered"
-                        offenders.append(str(o['TrailARN']))
-                except:
-                    pass
+
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
 
 
@@ -2313,7 +2314,6 @@ if __name__ == '__main__':
             sys.exit()
         elif opt in ("-p", "--profile"):
             profile_name = arg
-
 
     # Verify that the profile exist
     if not profile_name == "":
