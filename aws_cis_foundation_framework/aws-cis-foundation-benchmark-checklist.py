@@ -1188,7 +1188,7 @@ def control_3_3_ensure_log_metric_filter_root_usage(cloudtrails):
                         logGroupName=group
                     )
                     for p in filters['metricFilters']:
-                        if "{ $.userIdentity.type = \\\"Root\\\" && $.userIdentity.invokedBy NOT EXISTS && $.eventType != \\\"AwsServiceEvent\\\" }\" in str(p['filterPattern'])":
+                        if "{ $.userIdentity.type = \"Root\" && $.userIdentity.invokedBy NOT EXISTS && $.eventType != \"AwsServiceEvent\" }" in str(p['filterPattern']):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
                                 MetricName=p['metricTransformations'][0]['metricName'],
@@ -1231,7 +1231,7 @@ def control_3_4_ensure_log_metric_iam_policy_change(cloudtrails):
                         logGroupName=group
                     )
                     for p in filters['metricFilters']:
-                        if "{($.eventName=DeleteGroupPolicy)||($.eventName=DeleteRolePolicy)||($.eventName=DeleteUserPolicy)||($.eventName=PutGroupPolicy)||($.eventName=PutRolePolicy)||($.eventName=PutUserPolicy)||($.eventName=CreatePolicy)||($.eventName=DeletePolicy)||($.eventName=CreatePolicyVersion)||($.eventName=DeletePolicyVersion)||($.eventName=AttachRolePolicy)||($.eventName=DetachRolePolicy)||($.eventName=AttachUserPolicy)||($.eventName=DetachUserPolicy)||($.eventName=AttachGroupPolicy)||($.eventName=DetachGroupPolicy)}":
+                        if "{($.eventName=DeleteGroupPolicy)||($.eventName=DeleteRolePolicy)||($.eventName=DeleteUserPolicy)||($.eventName=PutGroupPolicy)||($.eventName=PutRolePolicy)||($.eventName=PutUserPolicy)||($.eventName=CreatePolicy)||($.eventName=DeletePolicy)||($.eventName=CreatePolicyVersion)||($.eventName=DeletePolicyVersion)||($.eventName=AttachRolePolicy)||($.eventName=DetachRolePolicy)||($.eventName=AttachUserPolicy)||($.eventName=DetachUserPolicy)||($.eventName=AttachGroupPolicy)||($.eventName=DetachGroupPolicy)}" in str(p['filterPattern']):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
                                 MetricName=p['metricTransformations'][0]['metricName'],
@@ -1274,7 +1274,7 @@ def control_3_5_ensure_log_metric_cloudtrail_configuration_changes(cloudtrails):
                         logGroupName=group
                     )
                     for p in filters['metricFilters']:
-                        if "{ ($.eventName = CreateTrail) || ($.eventName = UpdateTrail) || ($.eventName = DeleteTrail) || ($.eventName = StartLogging) || ($.eventName = StopLogging) }":
+                        if "{ ($.eventName = CreateTrail) || ($.eventName = UpdateTrail) || ($.eventName = DeleteTrail) || ($.eventName = StartLogging) || ($.eventName = StopLogging) }" in str(p['filterPattern']):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
                                 MetricName=p['metricTransformations'][0]['metricName'],
@@ -1317,7 +1317,7 @@ def control_3_6_ensure_log_metric_console_auth_failures(cloudtrails):
                         logGroupName=group
                     )
                     for p in filters['metricFilters']:
-                        if "{ ($.eventName = ConsoleLogin) && ($.errorMessage = \\\"Failed authentication\\\") }":
+                        if "{ ($.eventName = ConsoleLogin) && ($.errorMessage = \\\"Failed authentication\\\") }" in str(p['filterPattern']):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
                                 MetricName=p['metricTransformations'][0]['metricName'],
@@ -1360,7 +1360,7 @@ def control_3_7_ensure_log_metric_disabling_scheduled_delete_of_kms_cmk(cloudtra
                         logGroupName=group
                     )
                     for p in filters['metricFilters']:
-                        if "{($.eventSource = kms.amazonaws.com) && (($.eventName=DisableKey)||($.eventName=ScheduleKeyDeletion))} }":
+                        if "{($.eventSource = kms.amazonaws.com) && (($.eventName=DisableKey)||($.eventName=ScheduleKeyDeletion))} }" in str(p['filterPattern']):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
                                 MetricName=p['metricTransformations'][0]['metricName'],
@@ -1403,7 +1403,7 @@ def control_3_8_ensure_log_metric_s3_bucket_policy_changes(cloudtrails):
                         logGroupName=group
                     )
                     for p in filters['metricFilters']:
-                        if "{ ($.eventSource = s3.amazonaws.com) && (($.eventName = PutBucketAcl) || ($.eventName = PutBucketPolicy) || ($.eventName = PutBucketCors) || ($.eventName = PutBucketLifecycle) || ($.eventName = PutBucketReplication) || ($.eventName = DeleteBucketPolicy) || ($.eventName = DeleteBucketCors) || ($.eventName = DeleteBucketLifecycle) || ($.eventName = DeleteBucketReplication)) }":
+                        if "{ ($.eventSource = s3.amazonaws.com) && (($.eventName = PutBucketAcl) || ($.eventName = PutBucketPolicy) || ($.eventName = PutBucketCors) || ($.eventName = PutBucketLifecycle) || ($.eventName = PutBucketReplication) || ($.eventName = DeleteBucketPolicy) || ($.eventName = DeleteBucketCors) || ($.eventName = DeleteBucketLifecycle) || ($.eventName = DeleteBucketReplication)) }" in str(p['filterPattern']):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
                                 MetricName=p['metricTransformations'][0]['metricName'],
@@ -1446,7 +1446,7 @@ def control_3_9_ensure_log_metric_config_configuration_changes(cloudtrails):
                         logGroupName=group
                     )
                     for p in filters['metricFilters']:
-                        if "{($.eventSource = config.amazonaws.com) && (($.eventName=StopConfigurationRecorder)||($.eventName=DeleteDeliveryChannel)||($.even tName=PutDeliveryChannel)||($.eventName=PutConfigurationRecorder))}":
+                        if "{($.eventSource = config.amazonaws.com) && (($.eventName=StopConfigurationRecorder)||($.eventName=DeleteDeliveryChannel)||($.even tName=PutDeliveryChannel)||($.eventName=PutConfigurationRecorder))}" in str(p['filterPattern']):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
                                 MetricName=p['metricTransformations'][0]['metricName'],
@@ -1489,7 +1489,7 @@ def control_3_10_ensure_log_metric_security_group_changes(cloudtrails):
                         logGroupName=group
                     )
                     for p in filters['metricFilters']:
-                        if "{ ($.eventName = AuthorizeSecurityGroupIngress) || ($.eventName = AuthorizeSecurityGroupEgress) || ($.eventName = RevokeSecurityGroupIngress) || ($.eventName = RevokeSecurityGroupEgress) || ($.eventName = CreateSecurityGroup) || ($.eventName = DeleteSecurityGroup)}":
+                        if "{ ($.eventName = AuthorizeSecurityGroupIngress) || ($.eventName = AuthorizeSecurityGroupEgress) || ($.eventName = RevokeSecurityGroupIngress) || ($.eventName = RevokeSecurityGroupEgress) || ($.eventName = CreateSecurityGroup) || ($.eventName = DeleteSecurityGroup)}" in str(p['filterPattern']):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
                                 MetricName=p['metricTransformations'][0]['metricName'],
@@ -1532,7 +1532,7 @@ def control_3_11_ensure_log_metric_nacl(cloudtrails):
                         logGroupName=group
                     )
                     for p in filters['metricFilters']:
-                        if "{ ($.eventName = CreateNetworkAcl) || ($.eventName = CreateNetworkAclEntry) || ($.eventName = DeleteNetworkAcl) || ($.eventName = DeleteNetworkAclEntry) || ($.eventName = ReplaceNetworkAclEntry) || ($.eventName = ReplaceNetworkAclAssociation) }":
+                        if "{ ($.eventName = CreateNetworkAcl) || ($.eventName = CreateNetworkAclEntry) || ($.eventName = DeleteNetworkAcl) || ($.eventName = DeleteNetworkAclEntry) || ($.eventName = ReplaceNetworkAclEntry) || ($.eventName = ReplaceNetworkAclAssociation) }" in str(p['filterPattern']):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
                                 MetricName=p['metricTransformations'][0]['metricName'],
@@ -1575,7 +1575,7 @@ def control_3_12_ensure_log_metric_changes_to_network_gateways(cloudtrails):
                         logGroupName=group
                     )
                     for p in filters['metricFilters']:
-                        if "{ ($.eventName = CreateCustomerGateway) || ($.eventName = DeleteCustomerGateway) || ($.eventName = AttachInternetGateway) || ($.eventName = CreateInternetGateway) || ($.eventName = DeleteInternetGateway) || ($.eventName = DetachInternetGateway) }":
+                        if "{ ($.eventName = CreateCustomerGateway) || ($.eventName = DeleteCustomerGateway) || ($.eventName = AttachInternetGateway) || ($.eventName = CreateInternetGateway) || ($.eventName = DeleteInternetGateway) || ($.eventName = DetachInternetGateway) }" in str(p['filterPattern']):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
                                 MetricName=p['metricTransformations'][0]['metricName'],
@@ -1618,7 +1618,7 @@ def control_3_13_ensure_log_metric_changes_to_route_tables(cloudtrails):
                         logGroupName=group
                     )
                     for p in filters['metricFilters']:
-                        if "{ ($.eventName = CreateRoute) || ($.eventName = CreateRouteTable) || ($.eventName = ReplaceRoute) || ($.eventName = ReplaceRouteTableAssociation) || ($.eventName = DeleteRouteTable) || ($.eventName = DeleteRoute) || ($.eventName = DisassociateRouteTable) }":
+                        if "{ ($.eventName = CreateRoute) || ($.eventName = CreateRouteTable) || ($.eventName = ReplaceRoute) || ($.eventName = ReplaceRouteTableAssociation) || ($.eventName = DeleteRouteTable) || ($.eventName = DeleteRoute) || ($.eventName = DisassociateRouteTable) }" in str(p['filterPattern']):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
                                 MetricName=p['metricTransformations'][0]['metricName'],
@@ -1661,7 +1661,7 @@ def control_3_14_ensure_log_metric_changes_to_vpc(cloudtrails):
                         logGroupName=group
                     )
                     for p in filters['metricFilters']:
-                        if "{ ($.eventName = CreateVpc) || ($.eventName = DeleteVpc) || ($.eventName = ModifyVpcAttribute) || ($.eventName = AcceptVpcPeeringConnection) || ($.eventName = CreateVpcPeeringConnection) || ($.eventName = DeleteVpcPeeringConnection) || ($.eventName = RejectVpcPeeringConnection) || ($.eventName = AttachClassicLinkVpc) || ($.eventName = DetachClassicLinkVpc) || ($.eventName = DisableVpcClassicLink) || ($.eventName = EnableVpcClassicLink) }":
+                        if "{ ($.eventName = CreateVpc) || ($.eventName = DeleteVpc) || ($.eventName = ModifyVpcAttribute) || ($.eventName = AcceptVpcPeeringConnection) || ($.eventName = CreateVpcPeeringConnection) || ($.eventName = DeleteVpcPeeringConnection) || ($.eventName = RejectVpcPeeringConnection) || ($.eventName = AttachClassicLinkVpc) || ($.eventName = DetachClassicLinkVpc) || ($.eventName = DisableVpcClassicLink) || ($.eventName = EnableVpcClassicLink) }" in str(p['filterPattern']):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
                                 MetricName=p['metricTransformations'][0]['metricName'],
@@ -2142,10 +2142,10 @@ def shortAnnotation(controlResult):
 
 def send_results_to_sns(url):
     """Summary
-    
+
     Args:
         url (TYPE): SignedURL created by the S3 upload function
-    
+
     Returns:
         TYPE: Description
     """
@@ -2252,7 +2252,7 @@ def lambda_handler(event, context):
     control4.append(control_4_3_ensure_flow_logs_enabled_on_all_vpc(region_list))
     control4.append(control_4_4_ensure_default_security_groups_restricts_traffic(region_list))
     control4.append(control_4_5_ensure_route_tables_are_least_access(region_list))
-    
+
     # Join results
     controls = []
     controls.append(control1)
