@@ -1954,7 +1954,15 @@ def get_cloudtrails(regions):
     for n in regions:
         client = boto3.client('cloudtrail', region_name=n)
         response = client.describe_trails()
-        trails[n] = response['trailList']
+        temp = []
+        for m in response['trailList']:
+            if m['IsMultiRegionTrail'] is True:
+                if m['HomeRegion'] == n:
+                    temp.append(m)
+            else:
+                temp.append(m)
+        if len(temp) > 0:
+            trails[n] = temp
     return trails
 
 def get_account_number():
