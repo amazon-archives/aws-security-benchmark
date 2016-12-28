@@ -858,23 +858,35 @@ def control_2_3_ensure_cloudtrail_bucket_not_public(cloudtrails):
     scored = True
     for m, n in cloudtrails.iteritems():
         for o in n:
-            # it is possible to have a cloudtrail configured with a nonexistant bucket
-            try:
-                response = S3_CLIENT.get_bucket_acl(
-                    Bucket=o['S3BucketName']
-                )
-            except:
-                result = False
-                failReason = "Cloudtrail not configured to log to S3. "
-                offenders.append(str(o['TrailARN']))
-            for p in range(len(response['Grants'])):
+            #  We only want to check cases where there is a bucket
+            if "S3BucketName" in str(o):
                 try:
-                    if re.search(r'(AllUsers|AuthenticatedUsers)', response['Grants'][p]['Grantee']['URI']):
-                        result = False
-                        failReason = failReason + "Publically accessible CloudTrail bucket discovered"
-                        offenders.append(str(o['TrailARN']))
-                except:
-                    pass
+                    response = S3_CLIENT.get_bucket_acl(Bucket=o['S3BucketName'])
+                    for p in response['Grants']:
+                        # print("Grantee is " + str(p['Grantee']))
+                        if re.search(r'(global/AllUsers|global/AuthenticatedUsers)', str(p['Grantee'])):
+                            result = False
+                            offenders.append(str(o['TrailARN']) + ":PublicBucket")
+                            if "Publically" not in failReason:
+                                failReason = failReason + "Publically accessible CloudTrail bucket discovered."
+                except Exception as e:
+                    result = False
+                    if "AccessDenied" in str(e):
+                        offenders.append(str(o['TrailARN']) + ":AccessDenied")
+                        if "Missing" not in failReason:
+                            failReason = "Missing permissions to verify bucket ACL. " + failReason
+                    elif "NoSuchBucket" in str(e):
+                        offenders.append(str(o['TrailARN']) + ":NoBucket")
+                        if "Trailbucket" not in failReason:
+                            failReason = "Trailbucket doesn't exist. " + failReason
+                    else:
+                        offenders.append(str(o['TrailARN']) + ":CannotVerify")
+                        if "Cannot" not in failReason:
+                            failReason = "Cannot verify bucket ACL. " + failReason
+            else:
+                result = False
+                offenders.append(str(o['TrailARN']) + "NoS3Logging")
+                failReason = "Cloudtrail not configured to log to S3. " + failReason
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
 
 
