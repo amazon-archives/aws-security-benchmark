@@ -730,7 +730,7 @@ def control_1_23_no_active_initial_access_keys_with_iam_user(credreport):
                 if re.sub(r"\s", "T", str(m['CreateDate'])) == credreport[n]['user_creation_time']:
                     result = False
                     failReason = "Users with keys created at user creation time found"
-                    offenders.append(str(credreport[n]['arn'])+":"+str(m['AccessKeyId']))
+                    offenders.append(str(credreport[n]['arn']) + ":" + str(m['AccessKeyId']))
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
 
 
@@ -1012,9 +1012,7 @@ def control_2_6_ensure_cloudtrail_bucket_logging(cloudtrails):
         for o in n:
             # it is possible to have a cloudtrail configured with a nonexistant bucket
             try:
-                response = S3_CLIENT.get_bucket_logging(
-                  Bucket=o['S3BucketName']
-                )
+                response = S3_CLIENT.get_bucket_logging(Bucket=o['S3BucketName'])
             except:
                 result = False
                 failReason = "Cloudtrail not configured to log to S3. "
@@ -1072,19 +1070,20 @@ def control_2_8_ensure_kms_cmk_rotation(regions):
     scored = True
     for n in regions:
         kms_client = boto3.client('kms', region_name=n)
-        keys = kms_client.list_keys()
-        for i in range(len(keys['Keys'])):
-            try:
-                rotationStatus = kms_client.get_key_rotation_status(
-                    KeyId=keys['Keys'][i]['KeyId'])
-                if rotationStatus['KeyRotationEnabled'] is False:
-                    keyDescription = kms_client.describe_key(KeyId=keys['Keys'][i]['KeyId'])
-                    if "Default master key that protects my" not in keyDescription['KeyMetadata']['Description']:  # Ignore service keys
-                        result = False
-                        failReason = "KMS CMK rotation not enabled"
-                        offenders.append("Key:" + str(keyDescription['KeyMetadata']['Arn']))
-            except:
-                pass  # Ignore keys without permission, for example ACM key
+        paginator = kms_client.get_paginator('list_keys')
+        response_iterator = paginator.paginate()
+        for page in response_iterator:
+            for n in page['Keys']:
+                try:
+                    rotationStatus = kms_client.get_key_rotation_status(KeyId=n['KeyId'])
+                    if rotationStatus['KeyRotationEnabled'] is False:
+                        keyDescription = kms_client.describe_key(KeyId=n['KeyId'])
+                        if "Default master key that protects my" not in str(keyDescription['KeyMetadata']['Description']):  # Ignore service keys
+                            result = False
+                            failReason = "KMS CMK rotation not enabled"
+                            offenders.append("Key:" + str(keyDescription['KeyMetadata']['Arn']))
+                except:
+                    pass  # Ignore keys without permission, for example ACM key
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
 
 
