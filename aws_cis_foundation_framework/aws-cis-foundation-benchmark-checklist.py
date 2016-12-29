@@ -1122,8 +1122,7 @@ def control_3_1_ensure_log_metric_filter_unauthorized_api_calls(cloudtrails):
                             snsClient = boto3.client('sns', region_name=m)
                             subscribers = snsClient.list_subscriptions_by_topic(
                                 TopicArn=response['MetricAlarms'][0]['AlarmActions'][0]
-                                #NextToken='string'
-                                #Will we have more then 100 subscribers to alerts?
+                                #  Pagination not used since only 1 subscriber required
                             )
                             if not len(subscribers['Subscriptions']) == 0:
                                 result = True
@@ -1165,8 +1164,7 @@ def control_3_2_ensure_log_metric_filter_console_signin_no_mfa(cloudtrails):
                             snsClient = boto3.client('sns', region_name=m)
                             subscribers = snsClient.list_subscriptions_by_topic(
                                 TopicArn=response['MetricAlarms'][0]['AlarmActions'][0]
-                                #NextToken='string'
-                                #Will we have more then 100 subscribers to alerts?
+                                #  Pagination not used since only 1 subscriber required
                             )
                             if not len(subscribers['Subscriptions']) == 0:
                                 result = True
@@ -1208,8 +1206,7 @@ def control_3_3_ensure_log_metric_filter_root_usage(cloudtrails):
                             snsClient = boto3.client('sns', region_name=m)
                             subscribers = snsClient.list_subscriptions_by_topic(
                                 TopicArn=response['MetricAlarms'][0]['AlarmActions'][0]
-                                #NextToken='string'
-                                #Will we have more then 100 subscribers to alerts?
+                                #  Pagination not used since only 1 subscriber required
                             )
                             if not len(subscribers['Subscriptions']) == 0:
                                 result = True
@@ -1251,8 +1248,7 @@ def control_3_4_ensure_log_metric_iam_policy_change(cloudtrails):
                             snsClient = boto3.client('sns', region_name=m)
                             subscribers = snsClient.list_subscriptions_by_topic(
                                 TopicArn=response['MetricAlarms'][0]['AlarmActions'][0]
-                                #NextToken='string'
-                                #Will we have more then 100 subscribers to alerts?
+                                #  Pagination not used since only 1 subscriber required
                             )
                             if not len(subscribers['Subscriptions']) == 0:
                                 result = True
@@ -1294,8 +1290,7 @@ def control_3_5_ensure_log_metric_cloudtrail_configuration_changes(cloudtrails):
                             snsClient = boto3.client('sns', region_name=m)
                             subscribers = snsClient.list_subscriptions_by_topic(
                                 TopicArn=response['MetricAlarms'][0]['AlarmActions'][0]
-                                #NextToken='string'
-                                #Will we have more then 100 subscribers to alerts?
+                                #  Pagination not used since only 1 subscriber required
                             )
                             if not len(subscribers['Subscriptions']) == 0:
                                 result = True
@@ -1337,8 +1332,7 @@ def control_3_6_ensure_log_metric_console_auth_failures(cloudtrails):
                             snsClient = boto3.client('sns', region_name=m)
                             subscribers = snsClient.list_subscriptions_by_topic(
                                 TopicArn=response['MetricAlarms'][0]['AlarmActions'][0]
-                                #NextToken='string'
-                                #Will we have more then 100 subscribers to alerts?
+                                #  Pagination not used since only 1 subscriber required
                             )
                             if not len(subscribers['Subscriptions']) == 0:
                                 result = True
@@ -1380,8 +1374,7 @@ def control_3_7_ensure_log_metric_disabling_scheduled_delete_of_kms_cmk(cloudtra
                             snsClient = boto3.client('sns', region_name=m)
                             subscribers = snsClient.list_subscriptions_by_topic(
                                 TopicArn=response['MetricAlarms'][0]['AlarmActions'][0]
-                                #NextToken='string'
-                                #Will we have more then 100 subscribers to alerts?
+                                #  Pagination not used since only 1 subscriber required
                             )
                             if not len(subscribers['Subscriptions']) == 0:
                                 result = True
@@ -1423,8 +1416,7 @@ def control_3_8_ensure_log_metric_s3_bucket_policy_changes(cloudtrails):
                             snsClient = boto3.client('sns', region_name=m)
                             subscribers = snsClient.list_subscriptions_by_topic(
                                 TopicArn=response['MetricAlarms'][0]['AlarmActions'][0]
-                                #NextToken='string'
-                                #Will we have more then 100 subscribers to alerts?
+                                #  Pagination not used since only 1 subscriber required
                             )
                             if not len(subscribers['Subscriptions']) == 0:
                                 result = True
@@ -1466,8 +1458,7 @@ def control_3_9_ensure_log_metric_config_configuration_changes(cloudtrails):
                             snsClient = boto3.client('sns', region_name=m)
                             subscribers = snsClient.list_subscriptions_by_topic(
                                 TopicArn=response['MetricAlarms'][0]['AlarmActions'][0]
-                                #NextToken='string'
-                                #Will we have more then 100 subscribers to alerts?
+                                #  Pagination not used since only 1 subscriber required
                             )
                             if not len(subscribers['Subscriptions']) == 0:
                                 result = True
@@ -1509,8 +1500,7 @@ def control_3_10_ensure_log_metric_security_group_changes(cloudtrails):
                             snsClient = boto3.client('sns', region_name=m)
                             subscribers = snsClient.list_subscriptions_by_topic(
                                 TopicArn=response['MetricAlarms'][0]['AlarmActions'][0]
-                                #NextToken='string'
-                                #Will we have more then 100 subscribers to alerts?
+                                #  Pagination not used since only 1 subscriber required
                             )
                             if not len(subscribers['Subscriptions']) == 0:
                                 result = True
@@ -1552,8 +1542,7 @@ def control_3_11_ensure_log_metric_nacl(cloudtrails):
                             snsClient = boto3.client('sns', region_name=m)
                             subscribers = snsClient.list_subscriptions_by_topic(
                                 TopicArn=response['MetricAlarms'][0]['AlarmActions'][0]
-                                #NextToken='string'
-                                #Will we have more then 100 subscribers to alerts?
+                                #  Pagination not used since only 1 subscriber required
                             )
                             if not len(subscribers['Subscriptions']) == 0:
                                 result = True
@@ -1595,8 +1584,7 @@ def control_3_12_ensure_log_metric_changes_to_network_gateways(cloudtrails):
                             snsClient = boto3.client('sns', region_name=m)
                             subscribers = snsClient.list_subscriptions_by_topic(
                                 TopicArn=response['MetricAlarms'][0]['AlarmActions'][0]
-                                #NextToken='string'
-                                #Will we have more then 100 subscribers to alerts?
+                                #  Pagination not used since only 1 subscriber required
                             )
                             if not len(subscribers['Subscriptions']) == 0:
                                 result = True
@@ -1638,8 +1626,7 @@ def control_3_13_ensure_log_metric_changes_to_route_tables(cloudtrails):
                             snsClient = boto3.client('sns', region_name=m)
                             subscribers = snsClient.list_subscriptions_by_topic(
                                 TopicArn=response['MetricAlarms'][0]['AlarmActions'][0]
-                                #NextToken='string'
-                                #Will we have more then 100 subscribers to alerts?
+                                #  Pagination not used since only 1 subscriber required
                             )
                             if not len(subscribers['Subscriptions']) == 0:
                                 result = True
@@ -1681,8 +1668,7 @@ def control_3_14_ensure_log_metric_changes_to_vpc(cloudtrails):
                             snsClient = boto3.client('sns', region_name=m)
                             subscribers = snsClient.list_subscriptions_by_topic(
                                 TopicArn=response['MetricAlarms'][0]['AlarmActions'][0]
-                                #NextToken='string'
-                                #Will we have more then 100 subscribers to alerts?
+                                #  Pagination not used since only 1 subscriber required
                             )
                             if not len(subscribers['Subscriptions']) == 0:
                                 result = True
@@ -1738,7 +1724,7 @@ def control_4_1_ensure_ssh_not_open_to_world(regions):
                         if str(o['IpProtocol']) == "-1" and '0.0.0.0/0' in str(o['IpRanges']):
                             result = False
                             failReason = "Found Security Group with port 22 open to the world (0.0.0.0/0)"
-                            offenders.append(str(n)+" : "+str(m['GroupId']))
+                            offenders.append(str(n) + " : " + str(m['GroupId']))
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
 
 
@@ -1770,7 +1756,7 @@ def control_4_2_ensure_rdp_not_open_to_world(regions):
                         if str(o['IpProtocol']) == "-1" and '0.0.0.0/0' in str(o['IpRanges']):
                             result = False
                             failReason = "Found Security Group with port 3389 open to the world (0.0.0.0/0)"
-                            offenders.append(str(n)+" : "+str(m['GroupId']))
+                            offenders.append(str(n) + " : " + str(m['GroupId']))
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
 
 
@@ -1790,9 +1776,7 @@ def control_4_3_ensure_flow_logs_enabled_on_all_vpc(regions):
     for n in regions:
         client = boto3.client('ec2', region_name=n)
         flowlogs = client.describe_flow_logs(
-            #NextToken='string',
-            #MaxResults=123
-            # No paginator in boto atm.
+            #  No paginator support in boto atm.
         )
         activeLogs = []
         for m in flowlogs['FlowLogs']:
@@ -1812,7 +1796,7 @@ def control_4_3_ensure_flow_logs_enabled_on_all_vpc(regions):
             if not str(m['VpcId']) in str(activeLogs):
                 result = False
                 failReason = "VPC without active VPC Flow Logs found"
-                offenders.append(str(n)+" : "+str(m['VpcId']))
+                offenders.append(str(n) + " : " + str(m['VpcId']))
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
 
 
@@ -1845,7 +1829,7 @@ def control_4_4_ensure_default_security_groups_restricts_traffic(regions):
             if not (len(m['IpPermissions']) + len(m['IpPermissionsEgress'])) == 0:
                 result = False
                 failReason = "Default security groups with ingress or egress rules discovered"
-                offenders.append(str(n)+" : "+str(m['GroupId']))
+                offenders.append(str(n) + " : " + str(m['GroupId']))
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
 
 
@@ -1872,7 +1856,7 @@ def control_4_5_ensure_route_tables_are_least_access(regions):
                         if int(str(o['DestinationCidrBlock']).split("/", 1)[1]) < 24:
                             result = False
                             failReason = "Large CIDR block routed to peer discovered, please investigate"
-                            offenders.append(str(n)+" : "+str(m['RouteTableId']))
+                            offenders.append(str(n) + " : " + str(m['RouteTableId']))
                 except:
                     pass
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
@@ -1901,7 +1885,7 @@ def control_4_5_ensure_route_tables_are_least_access(regions):
                         if int(str(o['DestinationCidrBlock']).split("/", 1)[1]) < 24:
                             result = False
                             failReason = "Large CIDR block routed to peer discovered, please investigate"
-                            offenders.append(str(n)+" : "+str(m['RouteTableId']))
+                            offenders.append(str(n) + " : " + str(m['RouteTableId']))
                 except:
                     pass
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
@@ -1976,6 +1960,7 @@ def get_cloudtrails(regions):
             trails[n] = temp
     return trails
 
+
 def get_account_number():
     """Summary
 
@@ -2013,7 +1998,7 @@ def set_evaluation(invokeEvent, mainEvent, annotation):
                 },
             ],
             ResultToken=mainEvent['resultToken']
-            )
+        )
     else:
         configClient.put_evaluations(
             Evaluations=[
@@ -2025,7 +2010,7 @@ def set_evaluation(invokeEvent, mainEvent, annotation):
                 },
             ],
             ResultToken=mainEvent['resultToken']
-            )
+        )
 
 
 def json2html(controlResult, account):
@@ -2041,17 +2026,17 @@ def json2html(controlResult, account):
     shortReport = shortAnnotation(controlResult)
     table.append("<html>\n<head>\n<style>\n\n.table-outer {\n    background-color: #eaeaea;\n    border: 3px solid darkgrey;\n}\n\n.table-inner {\n    background-color: white;\n    border: 3px solid darkgrey;\n}\n\n.table-hover tr{\nbackground: transparent;\n}\n\n.table-hover tr:hover {\nbackground-color: lightgrey;\n}\n\ntable, tr, td, th{\n    line-height: 1.42857143;\n    vertical-align: top;\n    border: 1px solid darkgrey;\n    border-spacing: 0;\n    border-collapse: collapse;\n    width: auto;\n    max-width: auto;\n    background-color: transparent;\n    padding: 5px;\n}\n\ntable th {\n    padding-right: 20px;\n    text-align: left;\n}\n\ntd {\n    width:100%;\n}\n\ndiv.centered\n{\n  position: absolute;\n  width: auto;\n  height: auto;\n  z-index: 15;\n  top: 10%;\n  left: 20%;\n  right: 20%;\n  background: white;\n}\n\ndiv.centered table\n{\n    margin: auto;\n    text-align: left;\n}\n</style>\n</head>\n<body>\n<h1 style=\"text-align: center;\">AWS CIS Foundation Framework</h1>\n<div class=\"centered\">")
     table.append("<table class=\"table table-inner\">")
-    table.append("<tr><td>Account: "+account+"</td></tr>")
-    table.append("<tr><td>Report date: "+time.strftime("%c")+"</td></tr>")
-    table.append("<tr><td>Benchmark version: "+AWS_CIS_BENCHMARK_VERSION+"</td></tr>")
+    table.append("<tr><td>Account: " + account + "</td></tr>")
+    table.append("<tr><td>Report date: " + time.strftime("%c") + "</td></tr>")
+    table.append("<tr><td>Benchmark version: " + AWS_CIS_BENCHMARK_VERSION + "</td></tr>")
     table.append("<tr><td>Whitepaper location: <a href=\"https://d0.awsstatic.com/whitepapers/compliance/AWS_CIS_Foundations_Benchmark.pdf\" target=\"_blank\">https://d0.awsstatic.com/whitepapers/compliance/AWS_CIS_Foundations_Benchmark.pdf</a></td></tr>")
-    table.append("<tr><td>"+shortReport+"</td></tr></table><br><br>")
+    table.append("<tr><td>" + shortReport + "</td></tr></table><br><br>")
     tableHeadOuter = "<table class=\"table table-outer\">"
     tableHeadInner = "<table class=\"table table-inner\">"
     tableHeadHover = "<table class=\"table table-hover\">"
     table.append(tableHeadOuter)  # Outer table
     for m, _ in enumerate(controlResult):
-        table.append("<tr><th>"+controlResult[m][0]['ControlId'].split('.')[0]+"</th><td>"+tableHeadInner)
+        table.append("<tr><th>" + controlResult[m][0]['ControlId'].split('.')[0] + "</th><td>" + tableHeadInner)
         for n in range(len(controlResult[m])):
             if str(controlResult[m][n]['Result']) == "False":
                 resultStyle = " style=\"background-color:#ef3d47;\""
@@ -2059,13 +2044,13 @@ def json2html(controlResult, account):
                 resultStyle = " style=\"background-color:#ffff99;\""
             else:
                 resultStyle = " style=\"background-color:lightgreen;\""
-            table.append("<tr><th"+resultStyle+">"+controlResult[m][n]['ControlId'].split('.')[1]+"</th><td>"+tableHeadHover)
-            table.append("<tr><th>ControlId</th><td>"+controlResult[m][n]['ControlId']+"</td></tr>")
-            table.append("<tr><th>Description</th><td>"+controlResult[m][n]['Description']+"</td></tr>")
-            table.append("<tr><th>failReason</th><td>"+controlResult[m][n]['failReason']+"</td></tr>")
-            table.append("<tr><th>Offenders</th><td><ul>"+str(controlResult[m][n]['Offenders']).replace("', ", "',<br>")+"</ul></td></tr>")
-            table.append("<tr><th>Result</th><td>"+str(controlResult[m][n]['Result'])+"</td></tr>")
-            table.append("<tr><th>ScoredControl</th><td>"+str(controlResult[m][n]['ScoredControl'])+"</td></tr>")
+            table.append("<tr><th" + resultStyle + ">" + controlResult[m][n]['ControlId'].split('.')[1] + "</th><td>" + tableHeadHover)
+            table.append("<tr><th>ControlId</th><td>" + controlResult[m][n]['ControlId'] + "</td></tr>")
+            table.append("<tr><th>Description</th><td>" + controlResult[m][n]['Description'] + "</td></tr>")
+            table.append("<tr><th>failReason</th><td>" + controlResult[m][n]['failReason'] + "</td></tr>")
+            table.append("<tr><th>Offenders</th><td><ul>" + str(controlResult[m][n]['Offenders']).replace("', ", "',<br>") + "</ul></td></tr>")
+            table.append("<tr><th>Result</th><td>" + str(controlResult[m][n]['Result']) + "</td></tr>")
+            table.append("<tr><th>ScoredControl</th><td>" + str(controlResult[m][n]['ScoredControl']) + "</td></tr>")
             table.append("</table></td></tr>")
         table.append("</table></td></tr>")
     table.append("</table>")
@@ -2083,9 +2068,9 @@ def s3report(htmlReport, account):
         TYPE: Description
     """
     if S3_WEB_REPORT_NAME_DETAILS is True:
-        reportName = "cis_report_"+ str(account)+"_"+str(datetime.now().strftime('%Y%m%d_%H%M'))+".html"
+        reportName = "cis_report_" + str(account) + "_" + str(datetime.now().strftime('%Y%m%d_%H%M')) + ".html"
     else:
-        reportName ="cis_report.html"
+        reportName = "cis_report.html"
     with tempfile.NamedTemporaryFile() as f:
         for item in htmlReport:
             f.write(item)
@@ -2154,9 +2139,9 @@ def shortAnnotation(controlResult):
                     longAnnotation = True
     if longAnnotation:
         annotation.append("etc")
-        return "{\"Failed\":"+json.dumps(annotation)+"}"
+        return "{\"Failed\":" + json.dumps(annotation) + "}"
     else:
-        return "{\"Failed\":"+json.dumps(annotation)+"}"
+        return "{\"Failed\":" + json.dumps(annotation) + "}"
 
 
 def send_results_to_sns(url):
@@ -2173,7 +2158,7 @@ def send_results_to_sns(url):
     client = boto3.client('sns', region_name=region)
     client.publish(
         TopicArn=SNS_TOPIC_ARN,
-        Subject="AWS CIS Benchmark report - "+str(time.strftime("%c")),
+        Subject="AWS CIS Benchmark report - " + str(time.strftime("%c")),
         Message=json.dumps({'default': url}),
         MessageStructure='json'
     )
@@ -2290,7 +2275,7 @@ def lambda_handler(event, context):
             for n, _ in enumerate(htmlReport):
                 htmlReport[n] = re.sub(r"\d{12}", "111111111111", htmlReport[n])
         signedURL = s3report(htmlReport, accountNumber)
-        print("SignedURL:\n"+signedURL)
+        print("SignedURL:\n" + signedURL)
         if SEND_REPORT_URL_TO_SNS is True:
             send_results_to_sns(signedURL)
 
@@ -2303,14 +2288,14 @@ def lambda_handler(event, context):
 if __name__ == '__main__':
     profile_name = ''
     try:
-        opts, args = getopt.getopt(sys.argv[1:],"p:h",["profile=","help"])
+        opts, args = getopt.getopt(sys.argv[1:], "p:h", ["profile=", "help"])
     except getopt.GetoptError:
         print("Error: Illegal option\n")
         print("---Usage---")
         print('Run without parameters to use default profile:')
-        print("python "+sys.argv[0]+"\n")
+        print("python " + sys.argv[0] + "\n")
         print("Use -p or --profile to specify a specific profile:")
-        print("python "+sys.argv[0]+' -p <profile>')
+        print("python " + sys.argv[0] + ' -p <profile>')
         sys.exit(2)
 
     # Parameter options
@@ -2318,13 +2303,12 @@ if __name__ == '__main__':
         if opt in ("-h", "--help"):
             print("---Help---")
             print('Run without parameters to use default profile:')
-            print("python "+sys.argv[0]+"\n")
+            print("python " + sys.argv[0] + "\n")
             print("Use -p or --profile to specify a specific profile:")
-            print("python "+sys.argv[0]+' -p <profile>')
+            print("python " + sys.argv[0] + ' -p <profile>')
             sys.exit()
         elif opt in ("-p", "--profile"):
             profile_name = arg
-
 
     # Verify that the profile exist
     if not profile_name == "":
@@ -2332,7 +2316,7 @@ if __name__ == '__main__':
             boto3.setup_default_session(profile_name=profile_name)
         except Exception as e:
             if "could not be found" in str(e):
-                print("Error: "+str(e))
+                print("Error: " + str(e))
                 print("Please verify your profile name.")
                 sys.exit(2)
 
