@@ -1669,9 +1669,9 @@
       Properties: 
         LogGroupName: !GetAtt ResourceForGetCloudTrailCloudWatchLog.LogName
         FilterPattern: "{ 
-            ($.userIdentity.type = \"Root\") && 
-            ($.userIdentity.invokedBy NOT EXISTS) && 
-            ($.eventType != \"AwsServiceEvent\") 
+            $.userIdentity.type = \"Root\" && 
+            $.userIdentity.invokedBy NOT EXISTS && 
+            $.eventType != \"AwsServiceEvent\" 
             }"
         MetricTransformations: 
           - 
