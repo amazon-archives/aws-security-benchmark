@@ -59,7 +59,7 @@ SCRIPT_OUTPUT_JSON = True
 # Would you like to supress all output except JSON result?
 # Can be used when you want to pipe result to another system.
 # If using S3 reporting, please enable SNS integration to get S3 signed URL
-OUTPUT_ONLY_JSON = True
+OUTPUT_ONLY_JSON = False
 
 
 # --- Control Parameters ---
