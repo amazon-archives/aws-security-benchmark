@@ -2141,14 +2141,8 @@ def json_output(controlResult):
             inner[x] = controlResult[m][n]
         y = controlResult[m][0]['ControlId'].split('.')[0]
         outer[y] = inner
-    print("JSON output:")
-    print("-------------------------------------------------------")
+    outer['summary'] = shortAnnotation(controlResult)
     print(json.dumps(outer, sort_keys=True, indent=4, separators=(',', ': ')))
-    print("-------------------------------------------------------")
-    print("\n")
-    print("Summary:")
-    print(shortAnnotation(controlResult))
-    print("\n")
     return 0
 
 
