@@ -56,6 +56,11 @@ SNS_TOPIC_ARN = "CHANGE_ME_TO_YOUR_TOPIC_ARN"
 # Would you like to print the results as JSON to output?
 SCRIPT_OUTPUT_JSON = True
 
+# Would you like to supress all output except JSON result?
+# Can be used when you want to pipe result to another system.
+# If using S3 reporting, please enable SNS integration to get S3 signed URL
+OUTPUT_ONLY_JSON = True
+
 
 # --- Control Parameters ---
 
@@ -2141,14 +2146,17 @@ def json_output(controlResult):
             inner[x] = controlResult[m][n]
         y = controlResult[m][0]['ControlId'].split('.')[0]
         outer[y] = inner
-    print("JSON output:")
-    print("-------------------------------------------------------")
-    print(json.dumps(outer, sort_keys=True, indent=4, separators=(',', ': ')))
-    print("-------------------------------------------------------")
-    print("\n")
-    print("Summary:")
-    print(shortAnnotation(controlResult))
-    print("\n")
+    if OUTPUT_ONLY_JSON is True:
+        print(json.dumps(outer, sort_keys=True, indent=4, separators=(',', ': ')))
+    else:
+        print("JSON output:")
+        print("-------------------------------------------------------")
+        print(json.dumps(outer, sort_keys=True, indent=4, separators=(',', ': ')))
+        print("-------------------------------------------------------")
+        print("\n")
+        print("Summary:")
+        print(shortAnnotation(controlResult))
+        print("\n")
     return 0
 
 
@@ -2308,7 +2316,8 @@ def lambda_handler(event, context):
             for n, _ in enumerate(htmlReport):
                 htmlReport[n] = re.sub(r"\d{12}", "111111111111", htmlReport[n])
         signedURL = s3report(htmlReport, accountNumber)
-        print("SignedURL:\n" + signedURL)
+        if OUTPUT_ONLY_JSON is False:
+            print("SignedURL:\n" + signedURL)
         if SEND_REPORT_URL_TO_SNS is True:
             send_results_to_sns(signedURL)
 
