@@ -532,17 +532,23 @@ def control_1_14_root_hardware_mfa_enabled():
     control = "1.14"
     description = "Ensure hardware MFA is enabled for the root account"
     scored = True
-    paginator = IAM_CLIENT.get_paginator('list_virtual_mfa_devices')
-    response_iterator = paginator.paginate(
-        AssignmentStatus='Any',
-    )
-    pagedResult = []
-    for page in response_iterator:
-        for n in page['VirtualMFADevices']:
-            pagedResult.append(n)
-    if "mfa/root-account-mfa-device" in str(pagedResult):
-        failReason = "Root account not using hardware MFA"
+    # First verify that root is using MFA (avoiding false positive)
+    response = IAM_CLIENT.get_account_summary()
+    if response['SummaryMap']['AccountMFAEnabled'] == 1:
+        paginator = IAM_CLIENT.get_paginator('list_virtual_mfa_devices')
+        response_iterator = paginator.paginate(
+            AssignmentStatus='Any',
+        )
+        pagedResult = []
+        for page in response_iterator:
+            for n in page['VirtualMFADevices']:
+                pagedResult.append(n)
+        if "mfa/root-account-mfa-device" in str(pagedResult):
+            failReason = "Root account not using hardware MFA"
+            result = False
+    else:
         result = False
+        failReason = "Root account not using MFA"
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
 
 
