@@ -2059,7 +2059,7 @@
             eventSource: 
               - ec2.amazonaws.com
             eventName: 
-              - TerminateInstance
+              - TerminateInstances
         State: ENABLED
         Targets: 
           - 
