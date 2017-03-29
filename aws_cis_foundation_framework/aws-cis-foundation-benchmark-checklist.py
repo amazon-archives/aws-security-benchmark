@@ -2121,7 +2121,7 @@ def s3report(htmlReport, account):
             f.flush()
         try:
             S3_CLIENT.upload_file(f.name, S3_WEB_REPORT_BUCKET, reportName)
-        except Exception, e:
+        except Exception as e:
             return "Failed to upload report to S3 because: " + str(e)
     ttl = int(S3_WEB_REPORT_EXPIRE) * 60
     signedURL = S3_CLIENT.generate_presigned_url(
