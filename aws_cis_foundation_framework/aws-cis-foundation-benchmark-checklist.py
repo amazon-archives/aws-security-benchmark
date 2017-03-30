@@ -21,6 +21,7 @@ import sys
 import re
 import tempfile
 import getopt
+import os
 from datetime import datetime
 import boto3
 
@@ -2115,12 +2116,14 @@ def s3report(htmlReport, account):
         reportName = "cis_report_" + str(account) + "_" + str(datetime.now().strftime('%Y%m%d_%H%M')) + ".html"
     else:
         reportName = "cis_report.html"
-    with tempfile.NamedTemporaryFile() as f:
+    with tempfile.NamedTemporaryFile(delete=False) as f:
         for item in htmlReport:
             f.write(item)
             f.flush()
         try:
+            f.close()
             S3_CLIENT.upload_file(f.name, S3_WEB_REPORT_BUCKET, reportName)
+            os.unlink(f.name)
         except Exception as e:
             return "Failed to upload report to S3 because: " + str(e)
     ttl = int(S3_WEB_REPORT_EXPIRE) * 60
