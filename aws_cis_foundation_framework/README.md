@@ -12,6 +12,10 @@ You can also store the reports in a central S3 bucket if you run this for
 multiple accounts
 
 ## Execution
+### Requirement
+Verified with Python 2.7.
+Python 3.6 support in process.
+
 ### Config Rules
 By adding the script to you AWS account as a Lambda function you can tie it
 to a Config Rule.  
@@ -35,4 +39,3 @@ Specify profile by using the -p or --profile
 ## IAM Policy
 The IAM policy required to run the script is located in the file  
 aws-cis-foundation-benchmark-checklist-lambdarole.json  
-
