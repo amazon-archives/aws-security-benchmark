@@ -626,6 +626,12 @@
 
                 iam = boto3.client('iam')
                 mfa = iam.list_mfa_devices(UserName=user_name)
+                # Only check MFA on User with passwords
+                try:
+                    profile = iam.get_login_profile(UserName=user_name)
+                except:
+                    print('No login profile exists for {}. This user will be skipped.'.format(user_name))
+                    return 'NOT_APPLICABLE'
 
                 if len(mfa['MFADevices']) > 0:
                     return 'COMPLIANT'
