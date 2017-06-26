@@ -787,8 +787,8 @@ def control_1_24_no_overly_permissive_policies():
             # a policy statement has to contain either an Action or a NotAction
             if 'Action' in n.keys() and n['Effect'] == 'Allow':
                 if ("'*'" in str(n['Action']) or str(n['Action']) == "*") and ("'*'" in str(n['Resource']) or str(n['Resource']) == "*"):
-                    failReason = "Found full administrative policy"
                     result = False
+                    failReason = "Found full administrative policy"
                     offenders.append(str(m['Arn']))
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
 
