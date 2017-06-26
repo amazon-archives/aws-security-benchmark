@@ -189,7 +189,7 @@ def control_1_3_unused_credentials(credreport):
     for i in range(len(credreport)):
         if credreport[i]['password_enabled'] == "true":
             try:
-                delta = datetime.strptime(now, frm) - datetime.strptime(credreport[i]['password_last_used_date'], frm)
+                delta = datetime.strptime(now, frm) - datetime.strptime(credreport[i]['password_last_used'], frm)
                 # Verify password have been used in the last 90 days
                 if delta.days > 90:
                     result = False
