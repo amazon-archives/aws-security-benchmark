@@ -1341,7 +1341,7 @@ def control_3_6_ensure_log_metric_console_auth_failures(cloudtrails):
                         logGroupName=group
                     )
                     for p in filters['metricFilters']:
-                        patterns = ["\$\.eventName\s*=\s*\"?ConsoleLogin(\"|\)|\s)", "\$\.errorMessage\s*=\s*\\?\"?Failed authentication(\"|\)|\s)"]
+                        patterns = ["\$\.eventName\s*=\s*\"?ConsoleLogin(\"|\)|\s)", "\$\.errorMessage\s*=\s*\"?Failed authentication(\"|\)|\s)"]
                         if find_in_string(patterns, str(p['filterPattern'])):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
