@@ -1341,7 +1341,7 @@ def control_3_6_ensure_log_metric_console_auth_failures(cloudtrails):
                         logGroupName=group
                     )
                     for p in filters['metricFilters']:
-                        ["\$\.eventName\s*=\s*\"?ConsoleLogin(\"|\)|\s)", "\$\.errorMessage\s*=\s*\\?\"?Failed authentication(\"|\)|\s)"]
+                        patterns = ["\$\.eventName\s*=\s*\"?ConsoleLogin(\"|\)|\s)", "\$\.errorMessage\s*=\s*\"?Failed authentication(\"|\)|\s)"]
                         if find_in_string(patterns, str(p['filterPattern'])):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
@@ -1384,7 +1384,7 @@ def control_3_7_ensure_log_metric_disabling_scheduled_delete_of_kms_cmk(cloudtra
                         logGroupName=group
                     )
                     for p in filters['metricFilters']:
-                        ["\$\.eventSource\s*=\s*\"?kms\.amazonaws\.com(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DisableKey(\"|\)|\s)", "\$\.eventName\s*=\s*\"?ScheduleKeyDeletion(\"|\)|\s)"]
+                        patterns = ["\$\.eventSource\s*=\s*\"?kms\.amazonaws\.com(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DisableKey(\"|\)|\s)", "\$\.eventName\s*=\s*\"?ScheduleKeyDeletion(\"|\)|\s)"]
                         if find_in_string(patterns, str(p['filterPattern'])):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
