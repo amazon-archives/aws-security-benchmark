@@ -1721,7 +1721,8 @@
         FilterPattern: "{
             ($.eventName = \"ConsoleLogin\") &&
             ($.additionalEventData.MFAUsed != \"Yes\") &&
-            ($.responseElements.ConsoleLogin != \"Failure\")
+            ($.responseElements.ConsoleLogin != \"Failure\") &&
+            ($.additionalEventData.SamlProviderArn NOT EXISTS)
             }"
         MetricTransformations:
           -
