@@ -1720,7 +1720,9 @@
         LogGroupName: !GetAtt ResourceForGetCloudTrailCloudWatchLog.LogName
         FilterPattern: "{
             ($.eventName = \"ConsoleLogin\") &&
-            ($.additionalEventData.MFAUsed != \"Yes\")
+            ($.additionalEventData.MFAUsed != \"Yes\") &&
+            ($.responseElements.ConsoleLogin != \"Failure\") &&
+            ($.additionalEventData.SamlProviderArn NOT EXISTS)
             }"
         MetricTransformations:
           -
