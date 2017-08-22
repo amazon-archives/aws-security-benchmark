@@ -986,7 +986,7 @@ def control_2_5_ensure_config_all_regions(regions):
             if response['DeliveryChannelsStatus'][0]['configHistoryDeliveryInfo']['lastStatus'] != "SUCCESS":
                 result = False
                 failReason = "Config not enabled in all regions, not capturing all/global events or delivery channel errors"
-                offenders.append(str(n) + ":S3Delivery")
+                offenders.append(str(n) + ":S3orSNSDelivery")
         except:
             pass  # Will be captured by earlier rule
         try:
