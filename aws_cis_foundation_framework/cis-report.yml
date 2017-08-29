@@ -1,0 +1,142 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  LambdaBucketName:
+    Type: String
+    Description: Name of S3 Bucket Lambda Function lives in
+  LambdaMemorySize:
+    Type: String
+    Default: 1024
+    Description: Allocated memory for Lambda Function
+  PythonVersion:
+    Type: String
+    Default: python2.7
+  LambdaTimeout:
+    Type: String
+    Default: 300
+    Description: Timeout for Lambda Function
+  BucketForReport:
+    Type: String
+    Description: Bucket which will be used for storing reports
+  EmailAddress:
+    Type: String
+    Description: Email address which should recieve weekly CIS report
+  SnsTopicName:
+    Type: String
+    Description: Sns topic name
+
+#==================================================
+  # Create S3 bucket for report storing
+#==================================================
+Resources:
+  CisReportBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref BucketForReport
+#==================================================
+  # Create Role to give Lambda IAM, Cloudwatch, SNS, S3, Config, Cloudwatch logs
+#==================================================
+  RoleForCisReport:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AmazonSNSFullAccess
+        - arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess
+        - arn:aws:iam::aws:policy/IAMReadOnlyAccess
+        - arn:aws:iam::aws:policy/CloudWatchLogsReadOnlyAccess
+      Policies:
+        -
+          PolicyName: LambdaCisPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - "s3:GetBucketAcl"
+                  - "s3:GetBucketLogging"
+                  - "cloudwatch:DescribeAlarmsForMetric"
+                  - "cloudtrail:DescribeTrails"
+                  - "cloudtrail:GetTrailStatus"
+                  - "config:DescribeConfigurationRecorderStatus"
+                  - "config:DescribeConfigurationRecorders"
+                  - "config:DescribeDeliveryChannelStatus"
+                  - "config:PutEvaluations"
+                  - "kms:DescribeKey"
+                  - "kms:GetKeyRotationStatus"
+                  - "kms:ListKeys"
+                Resource: "*"
+        -
+          PolicyName: LambdaCisPolicyS3Report
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              -
+                Effect: Allow
+                Action:
+                  - "s3:PutObject"
+                  - "s3:GetObject"
+                  - "s3:DeleteObject"
+                Resource: !Join ['', ['arn:aws:s3:::', !Ref BucketForReport, /*]]
+#==================================================
+  # Create Lambda Function that generate CIS report
+#==================================================
+  ArnTopicForReports:
+    Type: "AWS::SNS::Topic"
+    Properties:
+      DisplayName: !Ref SnsTopicName
+      Subscription:
+        -
+          Endpoint:
+              Ref: EmailAddress
+          Protocol: "email"
+      TopicName: !Ref SnsTopicName
+
+  FunctionToGenerateCisReport:
+    Type: "AWS::Lambda::Function"
+    DependsOn: RoleForCisReport
+    Properties:
+      FunctionName: GenerateCisReport
+      Environment:
+        Variables:
+          SNS_TOPIC_ARN: !Ref ArnTopicForReports
+          BUCKET_FOR_REPORT:
+            Ref: BucketForReport
+      Code:
+        S3Bucket:
+          Ref: LambdaBucketName
+        S3Key: "cis_report_lambda.zip"
+
+      Description: Sends report to admin users
+      Handler: aws-cis-foundation-benchmark-checklist.lambda_handler
+      MemorySize:
+        Ref: LambdaMemorySize
+      Role: !GetAtt RoleForCisReport.Arn
+      Runtime:
+        Ref: PythonVersion
+      Timeout:
+        Ref: LambdaTimeout
+
+  ScheduledRuleForGeneratingReports:
+    Type: "AWS::Events::Rule"
+    Properties:
+      Name: ScheduledReportGenerating
+      Description: Run Lambda Function weekly
+      ScheduleExpression: "rate(7 days)"
+      State: ENABLED
+      Targets:
+        -
+          Arn: !GetAtt FunctionToGenerateCisReport.Arn
+          Id: "TargetFunctionV1"

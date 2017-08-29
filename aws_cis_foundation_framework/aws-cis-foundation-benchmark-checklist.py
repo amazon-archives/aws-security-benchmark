@@ -37,7 +37,8 @@ S3_WEB_REPORT = True
 
 # Where should the report be delivered to?
 # Make sure to update permissions for the Lambda role if you change bucket name.
-S3_WEB_REPORT_BUCKET = "CHANGE_ME_TO_YOUR_S3_BUCKET"
+# Use lambda variable BUCKET_FOR_REPORT or setup environment variable
+S3_WEB_REPORT_BUCKET = os.environ['BUCKET_FOR_REPORT']
 
 # Create separate report files?
 # This will add date and account number as prefix. Example: cis_report_111111111111_161220_1213.html
@@ -51,8 +52,9 @@ S3_WEB_REPORT_EXPIRE = "168"
 S3_WEB_REPORT_OBFUSCATE_ACCOUNT = False
 
 # Would  you like to send the report signedURL to an SNS topic
-SEND_REPORT_URL_TO_SNS = False
-SNS_TOPIC_ARN = "CHANGE_ME_TO_YOUR_TOPIC_ARN"
+SEND_REPORT_URL_TO_SNS = True
+# Use lambda variable SNS_TOPIC_ARN or setup environment variable
+SNS_TOPIC_ARN = os.environ['SNS_TOPIC_ARN']
 
 # Would you like to print the results as JSON to output?
 SCRIPT_OUTPUT_JSON = True
