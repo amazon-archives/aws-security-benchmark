@@ -1,7 +1,7 @@
 ---
 
   #====================================================================================================
-  # AWS CloudFormation template for establishing CIS AWS 1.1 benchmark governance rules
+  # AWS CloudFormation template for establishing CIS AWS 1.1 benchmark governance rules test
   # Download the benchmarks here: https://benchmarks.cisecurity.org/en-us/?route=downloads.form.awsfoundations.110
   #
   # The controls are a combination of AWS Config Rules (both AWS-managed and custom), Amazon CloudWatch rules, and Amazon CloudWatch alarms.
