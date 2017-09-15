@@ -1942,6 +1942,18 @@ def get_cred_report():
     reader = csv.DictReader(response['Content'].splitlines(), delimiter=',')
     for row in reader:
         report.append(row)
+
+    # Verify if root key's never been used, if so add N/A
+    try:
+        if report[0]['access_key_1_last_used_date']:
+            pass
+    except:
+        report[0]['access_key_1_last_used_date'] = "N/A"
+    try:
+        if report[0]['access_key_2_last_used_date']:
+            pass
+    except:
+        report[0]['access_key_2_last_used_date'] = "N/A"
     return report
 
 
