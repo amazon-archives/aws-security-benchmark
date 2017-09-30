@@ -5,7 +5,7 @@
 
 The AWS services used for these benchmarks are used in the following relationship:
 
-![CIS Benchmark Architecture Diagram](https://github.com/awslabs/aws-security-benchmark/blob/master/architecture/assets/cis-benchmark-architecture.jpg)
+![CIS Benchmark Architecture Diagram](assets/cis-benchmark-architecture.jpg)
 
 The following preconditions must be met before the stack can be launched:
 
