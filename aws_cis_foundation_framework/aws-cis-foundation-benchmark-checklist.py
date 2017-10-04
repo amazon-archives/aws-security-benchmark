@@ -712,7 +712,7 @@ def control_1_22_ensure_incident_management_roles():
     offenders = []
     try:
         response = IAM_CLIENT.list_entities_for_policy(
-            PolicyArn='arn:aws:iam::aws:policy/AWSSupportAccess2'
+            PolicyArn='arn:aws:iam::aws:policy/AWSSupportAccess'
         )
         if (len(response['PolicyGroups']) + len(response['PolicyUsers']) + len(response['PolicyRoles'])) == 0:
             result = False
