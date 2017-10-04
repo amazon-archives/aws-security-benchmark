@@ -710,12 +710,16 @@ def control_1_22_ensure_incident_management_roles():
     description = "Ensure a support role has been created to manage incidents with AWS Support"
     scored = True
     offenders = []
-    response = IAM_CLIENT.list_entities_for_policy(
-        PolicyArn='arn:aws:iam::aws:policy/AWSSupportAccess'
-    )
-    if (len(response['PolicyGroups']) + len(response['PolicyUsers']) + len(response['PolicyRoles'])) == 0:
+    try:
+        response = IAM_CLIENT.list_entities_for_policy(
+            PolicyArn='arn:aws:iam::aws:policy/AWSSupportAccess2'
+        )
+        if (len(response['PolicyGroups']) + len(response['PolicyUsers']) + len(response['PolicyRoles'])) == 0:
+            result = False
+            failReason = "No user, group or role assigned AWSSupportAccess"
+    except:
         result = False
-        failReason = "No user, group or role assigned AWSSupportAccess"
+        failReason = "AWSSupportAccess policy not created"
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
 
 
