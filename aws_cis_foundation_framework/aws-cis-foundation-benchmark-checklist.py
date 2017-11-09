@@ -14,17 +14,18 @@ Attributes:
 """
 
 from __future__ import print_function
-import json
-import csv
-import time
-import sys
-import re
-import tempfile
-import getopt
-import os
-from datetime import datetime
-import boto3
 
+import csv
+import getopt
+import json
+import os
+import re
+import sys
+import tempfile
+import time
+from datetime import datetime
+
+import boto3
 
 # --- Script controls ---
 
@@ -62,7 +63,6 @@ SCRIPT_OUTPUT_JSON = True
 # If using S3 reporting, please enable SNS integration to get S3 signed URL
 OUTPUT_ONLY_JSON = False
 
-
 # --- Control Parameters ---
 
 # Control 1.18 - IAM manager and master role names <Not implemented yet, under review>
@@ -73,7 +73,6 @@ IAM_MANAGER_POLICY = "iam_manager_policy"
 
 # Control 1.1 - Days allowed since use of root account.
 CONTROL_1_1_DAYS = 0
-
 
 # --- Global ---
 IAM_CLIENT = boto3.client('iam')
@@ -135,7 +134,8 @@ def control_1_1_root_use(credreport):
             pass
         else:
             print("Something went wrong")
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # 1.2 Ensure multi-factor authentication (MFA) is enabled for all IAM users that have a console password (Scored)
@@ -162,7 +162,8 @@ def control_1_2_mfa_on_password_enabled_iam(credreport):
                 result = False
                 failReason = "No MFA on users with password. "
                 offenders.append(str(credreport[i]['arn']))
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # 1.3 Ensure credentials unused for 90 days or greater are disabled (Scored)
@@ -199,7 +200,8 @@ def control_1_3_unused_credentials(credreport):
                 pass  # Never used
         if credreport[i]['access_key_1_active'] == "true":
             try:
-                delta = datetime.strptime(now, frm) - datetime.strptime(credreport[i]['access_key_1_last_used_date'], frm)
+                delta = datetime.strptime(now, frm) - datetime.strptime(credreport[i]['access_key_1_last_used_date'],
+                                                                        frm)
                 # Verify password have been used in the last 90 days
                 if delta.days > 90:
                     result = False
@@ -209,7 +211,8 @@ def control_1_3_unused_credentials(credreport):
                 pass
         if credreport[i]['access_key_2_active'] == "true":
             try:
-                delta = datetime.strptime(now, frm) - datetime.strptime(credreport[i]['access_key_2_last_used_date'], frm)
+                delta = datetime.strptime(now, frm) - datetime.strptime(credreport[i]['access_key_2_last_used_date'],
+                                                                        frm)
                 # Verify password have been used in the last 90 days
                 if delta.days > 90:
                     result = False
@@ -218,7 +221,8 @@ def control_1_3_unused_credentials(credreport):
             except:
                 # Never used
                 pass
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # 1.4 Ensure access keys are rotated every 90 days or less (Scored)
@@ -283,7 +287,8 @@ def control_1_4_rotated_keys(credreport):
                     offenders.append(str(credreport[i]['arn']) + ":unused key2")
             except:
                 pass
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # 1.5 Ensure IAM password policy requires at least one uppercase letter (Scored)
@@ -309,7 +314,8 @@ def control_1_5_password_policy_uppercase(passwordpolicy):
         if passwordpolicy['RequireUppercaseCharacters'] is False:
             result = False
             failReason = "Password policy does not require at least one uppercase letter"
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # 1.6 Ensure IAM password policy requires at least one lowercase letter (Scored)
@@ -335,7 +341,8 @@ def control_1_6_password_policy_lowercase(passwordpolicy):
         if passwordpolicy['RequireLowercaseCharacters'] is False:
             result = False
             failReason = "Password policy does not require at least one uppercase letter"
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # 1.7 Ensure IAM password policy requires at least one symbol (Scored)
@@ -361,7 +368,8 @@ def control_1_7_password_policy_symbol(passwordpolicy):
         if passwordpolicy['RequireSymbols'] is False:
             result = False
             failReason = "Password policy does not require at least one symbol"
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # 1.8 Ensure IAM password policy requires at least one number (Scored)
@@ -387,7 +395,8 @@ def control_1_8_password_policy_number(passwordpolicy):
         if passwordpolicy['RequireNumbers'] is False:
             result = False
             failReason = "Password policy does not require at least one number"
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # 1.9 Ensure IAM password policy requires minimum length of 14 or greater (Scored)
@@ -413,7 +422,8 @@ def control_1_9_password_policy_length(passwordpolicy):
         if passwordpolicy['MinimumPasswordLength'] < 14:
             result = False
             failReason = "Password policy does not require at least 14 characters"
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # 1.10 Ensure IAM password policy prevents password reuse (Scored)
@@ -445,7 +455,8 @@ def control_1_10_password_policy_reuse(passwordpolicy):
         except:
             result = False
             failReason = "Password policy does not prevent reusing last 24 passwords"
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # 1.11 Ensure IAM password policy expires passwords within 90 days or less (Scored)
@@ -475,7 +486,8 @@ def control_1_11_password_policy_expire(passwordpolicy):
         else:
             result = False
             failReason = "Password policy does not expire passwords after 90 days or less"
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # 1.12 Ensure no root account access key exists (Scored)
@@ -497,7 +509,8 @@ def control_1_12_root_key_exists(credreport):
     if (credreport[0]['access_key_1_active'] == "true") or (credreport[0]['access_key_2_active'] == "true"):
         result = False
         failReason = "Root have active access keys"
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # 1.13 Ensure MFA is enabled for the "root" account (Scored)
@@ -517,7 +530,8 @@ def control_1_13_root_mfa_enabled():
     if response['SummaryMap']['AccountMFAEnabled'] != 1:
         result = False
         failReason = "Root account not using MFA"
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # 1.14 Ensure hardware MFA is enabled for the "root" account (Scored)
@@ -550,7 +564,8 @@ def control_1_14_root_hardware_mfa_enabled():
     else:
         result = False
         failReason = "Root account not using MFA"
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # 1.15 Ensure security questions are registered in the AWS account (Not Scored/Manual)
@@ -567,7 +582,8 @@ def control_1_15_security_questions_registered():
     description = "Ensure security questions are registered in the AWS account, please verify manually"
     scored = False
     failReason = "Control not implemented using API, please verify manually"
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # 1.16 Ensure IAM policies are attached only to groups or roles (Scored)
@@ -599,7 +615,8 @@ def control_1_16_no_policies_on_iam_users():
             result = False
             failReason = "IAM user have inline policy attached"
             offenders.append(str(n['Arn']))
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # 1.17 Enable detailed billing (Scored)
@@ -616,7 +633,8 @@ def control_1_17_detailed_billing_enabled():
     description = "Enable detailed billing, please verify manually"
     scored = True
     failReason = "Control not implemented using API, please verify manually"
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # 1.18 Ensure IAM Master and IAM Manager roles are active (Scored)
@@ -632,7 +650,8 @@ def control_1_18_ensure_iam_master_and_manager_roles():
     control = "1.18"
     description = "Ensure IAM Master and IAM Manager roles are active. Control under review/investigation"
     scored = True
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # 1.19 Maintain current contact details (Scored)
@@ -649,7 +668,8 @@ def control_1_19_maintain_current_contact_details():
     description = "Maintain current contact details, please verify manually"
     scored = True
     failReason = "Control not implemented using API, please verify manually"
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # 1.20 Ensure security contact information is registered (Scored)
@@ -666,7 +686,8 @@ def control_1_20_ensure_security_contact_details():
     description = "Ensure security contact information is registered, please verify manually"
     scored = True
     failReason = "Control not implemented using API, please verify manually"
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # 1.21 Ensure IAM instance roles are used for AWS resource access from instances (Scored)
@@ -691,9 +712,10 @@ def control_1_21_ensure_iam_instance_roles_used():
             if response['Reservations'][n]['Instances'][0]['IamInstanceProfile']:
                 pass
         except:
-                result = False
-                offenders.append(str(response['Reservations'][n]['Instances'][0]['InstanceId']))
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+            result = False
+            offenders.append(str(response['Reservations'][n]['Instances'][0]['InstanceId']))
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # 1.22 Ensure a support role has been created to manage incidents with AWS Support (Scored)
@@ -720,7 +742,8 @@ def control_1_22_ensure_incident_management_roles():
     except:
         result = False
         failReason = "AWSSupportAccess policy not created"
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # 1.23 Do not setup access keys during initial user setup for all IAM users that have a console password (Not Scored)
@@ -747,7 +770,8 @@ def control_1_23_no_active_initial_access_keys_with_iam_user(credreport):
                     result = False
                     failReason = "Users with keys created at user creation time found"
                     offenders.append(str(credreport[n]['arn']) + ":" + str(m['AccessKeyId']))
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # 1.24  Ensure IAM policies that allow full "*:*" administrative privileges are not created (Scored)
@@ -790,11 +814,13 @@ def control_1_24_no_overly_permissive_policies():
         for n in statements:
             # a policy statement has to contain either an Action or a NotAction
             if 'Action' in n.keys() and n['Effect'] == 'Allow':
-                if ("'*'" in str(n['Action']) or str(n['Action']) == "*") and ("'*'" in str(n['Resource']) or str(n['Resource']) == "*"):
+                if ("'*'" in str(n['Action']) or str(n['Action']) == "*") and (
+                        "'*'" in str(n['Resource']) or str(n['Resource']) == "*"):
                     result = False
                     failReason = "Found full administrative policy"
                     offenders.append(str(m['Arn']))
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # --- 2 Logging ---
@@ -827,7 +853,8 @@ def control_2_1_ensure_cloud_trail_all_regions(cloudtrails):
                     break
     if result is False:
         failReason = "No enabled multi region trails found"
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # 2.2 Ensure CloudTrail log file validation is enabled (Scored)
@@ -854,7 +881,8 @@ def control_2_2_ensure_cloudtrail_validation(cloudtrails):
                 offenders.append(str(o['TrailARN']))
     offenders = set(offenders)
     offenders = list(offenders)
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # 2.3 Ensure the S3 bucket CloudTrail logs to is not publicly accessible (Scored)
@@ -904,7 +932,8 @@ def control_2_3_ensure_cloudtrail_bucket_not_public(cloudtrails):
                 result = False
                 offenders.append(str(o['TrailARN']) + "NoS3Logging")
                 failReason = "Cloudtrail not configured to log to S3. " + failReason
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # 2.4 Ensure CloudTrail trails are integrated with CloudWatch Logs (Scored)
@@ -936,7 +965,8 @@ def control_2_4_ensure_cloudtrail_cloudwatch_logs_integration(cloudtrails):
                 result = False
                 failReason = "CloudTrails without CloudWatch Logs discovered"
                 offenders.append(str(o['TrailARN']))
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # 2.5 Ensure AWS Config is enabled in all regions (Scored)
@@ -1006,7 +1036,8 @@ def control_2_5_ensure_config_all_regions(regions):
         result = False
         failReason = "Config not enabled in all regions, not capturing all/global events or delivery channel errors"
         offenders.append("Global:NotRecording")
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # 2.6 Ensure S3 bucket access logging is enabled on the CloudTrail S3 bucket (Scored)
@@ -1041,7 +1072,8 @@ def control_2_6_ensure_cloudtrail_bucket_logging(cloudtrails):
                 result = False
                 failReason = failReason + "CloudTrail S3 bucket without logging discovered"
                 offenders.append("Trail:" + str(o['TrailARN']) + " - S3Bucket:" + str(o['S3BucketName']))
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # 2.7 Ensure CloudTrail logs are encrypted at rest using KMS CMKs (Scored)
@@ -1069,7 +1101,8 @@ def control_2_7_ensure_cloudtrail_encryption_kms(cloudtrails):
                 result = False
                 failReason = "CloudTrail not using KMS CMK for encryption discovered"
                 offenders.append("Trail:" + str(o['TrailARN']))
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # 2.8 Ensure rotation for customer created CMKs is enabled (Scored)
@@ -1095,13 +1128,15 @@ def control_2_8_ensure_kms_cmk_rotation(regions):
                     rotationStatus = kms_client.get_key_rotation_status(KeyId=n['KeyId'])
                     if rotationStatus['KeyRotationEnabled'] is False:
                         keyDescription = kms_client.describe_key(KeyId=n['KeyId'])
-                        if "Default master key that protects my" not in str(keyDescription['KeyMetadata']['Description']):  # Ignore service keys
+                        if "Default master key that protects my" not in str(
+                                keyDescription['KeyMetadata']['Description']):  # Ignore service keys
                             result = False
                             failReason = "KMS CMK rotation not enabled"
                             offenders.append("Key:" + str(keyDescription['KeyMetadata']['Arn']))
                 except:
                     pass  # Ignore keys without permission, for example ACM key
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # --- Monitoring ---
@@ -1130,7 +1165,8 @@ def control_3_1_ensure_log_metric_filter_unauthorized_api_calls(cloudtrails):
                         logGroupName=group
                     )
                     for p in filters['metricFilters']:
-                        patterns = ["\$\.errorCode\s*=\s*\"?\*UnauthorizedOperation(\"|\)|\s)", "\$\.errorCode\s*=\s*\"?AccessDenied\*(\"|\)|\s)"]
+                        patterns = ["\$\.errorCode\s*=\s*\"?\*UnauthorizedOperation(\"|\)|\s)",
+                                    "\$\.errorCode\s*=\s*\"?AccessDenied\*(\"|\)|\s)"]
                         if find_in_string(patterns, str(p['filterPattern'])):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
@@ -1146,7 +1182,8 @@ def control_3_1_ensure_log_metric_filter_unauthorized_api_calls(cloudtrails):
                                 result = True
             except:
                 pass
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # 3.2 Ensure a log metric filter and alarm exist for Management Console sign-in without MFA (Scored)
@@ -1173,7 +1210,8 @@ def control_3_2_ensure_log_metric_filter_console_signin_no_mfa(cloudtrails):
                         logGroupName=group
                     )
                     for p in filters['metricFilters']:
-                        patterns = ["\$\.eventName\s*=\s*\"?ConsoleLogin(\"|\)|\s)", "\$\.additionalEventData\.MFAUsed\s*\!=\s*\"?Yes"]
+                        patterns = ["\$\.eventName\s*=\s*\"?ConsoleLogin(\"|\)|\s)",
+                                    "\$\.additionalEventData\.MFAUsed\s*\!=\s*\"?Yes"]
                         if find_in_string(patterns, str(p['filterPattern'])):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
@@ -1189,7 +1227,8 @@ def control_3_2_ensure_log_metric_filter_console_signin_no_mfa(cloudtrails):
                                 result = True
             except:
                 pass
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # 3.3 Ensure a log metric filter and alarm exist for usage of "root" account (Scored)
@@ -1216,7 +1255,9 @@ def control_3_3_ensure_log_metric_filter_root_usage(cloudtrails):
                         logGroupName=group
                     )
                     for p in filters['metricFilters']:
-                        patterns = ["\$\.userIdentity\.type\s*=\s*\"?Root", "\$\.userIdentity\.invokedBy\s*NOT\s*EXISTS", "\$\.eventType\s*\!=\s*\"?AwsServiceEvent(\"|\)|\s)"]
+                        patterns = ["\$\.userIdentity\.type\s*=\s*\"?Root",
+                                    "\$\.userIdentity\.invokedBy\s*NOT\s*EXISTS",
+                                    "\$\.eventType\s*\!=\s*\"?AwsServiceEvent(\"|\)|\s)"]
                         if find_in_string(patterns, str(p['filterPattern'])):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
@@ -1232,7 +1273,8 @@ def control_3_3_ensure_log_metric_filter_root_usage(cloudtrails):
                                 result = True
             except:
                 pass
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # 3.4 Ensure a log metric filter and alarm exist for IAM policy changes  (Scored)
@@ -1259,7 +1301,22 @@ def control_3_4_ensure_log_metric_iam_policy_change(cloudtrails):
                         logGroupName=group
                     )
                     for p in filters['metricFilters']:
-                        patterns = ["\$\.eventName\s*=\s*\"?DeleteGroupPolicy(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeleteRolePolicy(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeleteUserPolicy(\"|\)|\s)", "\$\.eventName\s*=\s*\"?PutGroupPolicy(\"|\)|\s)", "\$\.eventName\s*=\s*\"?PutRolePolicy(\"|\)|\s)", "\$\.eventName\s*=\s*\"?PutUserPolicy(\"|\)|\s)", "\$\.eventName\s*=\s*\"?CreatePolicy(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeletePolicy(\"|\)|\s)", "\$\.eventName\s*=\s*\"?CreatePolicyVersion(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeletePolicyVersion(\"|\)|\s)", "\$\.eventName\s*=\s*\"?AttachRolePolicy(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DetachRolePolicy(\"|\)|\s)", "\$\.eventName\s*=\s*\"?AttachUserPolicy(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DetachUserPolicy(\"|\)|\s)", "\$\.eventName\s*=\s*\"?AttachGroupPolicy(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DetachGroupPolicy(\"|\)|\s)"]
+                        patterns = ["\$\.eventName\s*=\s*\"?DeleteGroupPolicy(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?DeleteRolePolicy(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?DeleteUserPolicy(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?PutGroupPolicy(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?PutRolePolicy(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?PutUserPolicy(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?CreatePolicy(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?DeletePolicy(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?CreatePolicyVersion(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?DeletePolicyVersion(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?AttachRolePolicy(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?DetachRolePolicy(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?AttachUserPolicy(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?DetachUserPolicy(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?AttachGroupPolicy(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?DetachGroupPolicy(\"|\)|\s)"]
                         if find_in_string(patterns, str(p['filterPattern'])):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
@@ -1275,7 +1332,8 @@ def control_3_4_ensure_log_metric_iam_policy_change(cloudtrails):
                                 result = True
             except:
                 pass
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # 3.5 Ensure a log metric filter and alarm exist for CloudTrail configuration changes (Scored)
@@ -1302,7 +1360,11 @@ def control_3_5_ensure_log_metric_cloudtrail_configuration_changes(cloudtrails):
                         logGroupName=group
                     )
                     for p in filters['metricFilters']:
-                        patterns = ["\$\.eventName\s*=\s*\"?CreateTrail(\"|\)|\s)", "\$\.eventName\s*=\s*\"?UpdateTrail(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeleteTrail(\"|\)|\s)", "\$\.eventName\s*=\s*\"?StartLogging(\"|\)|\s)", "\$\.eventName\s*=\s*\"?StopLogging(\"|\)|\s)"]
+                        patterns = ["\$\.eventName\s*=\s*\"?CreateTrail(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?UpdateTrail(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?DeleteTrail(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?StartLogging(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?StopLogging(\"|\)|\s)"]
                         if find_in_string(patterns, str(p['filterPattern'])):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
@@ -1318,7 +1380,8 @@ def control_3_5_ensure_log_metric_cloudtrail_configuration_changes(cloudtrails):
                                 result = True
             except:
                 pass
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # 3.6 Ensure a log metric filter and alarm exist for AWS Management Console authentication failures (Scored)
@@ -1345,7 +1408,8 @@ def control_3_6_ensure_log_metric_console_auth_failures(cloudtrails):
                         logGroupName=group
                     )
                     for p in filters['metricFilters']:
-                        patterns = ["\$\.eventName\s*=\s*\"?ConsoleLogin(\"|\)|\s)", "\$\.errorMessage\s*=\s*\"?Failed authentication(\"|\)|\s)"]
+                        patterns = ["\$\.eventName\s*=\s*\"?ConsoleLogin(\"|\)|\s)",
+                                    "\$\.errorMessage\s*=\s*\"?Failed authentication(\"|\)|\s)"]
                         if find_in_string(patterns, str(p['filterPattern'])):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
@@ -1361,7 +1425,8 @@ def control_3_6_ensure_log_metric_console_auth_failures(cloudtrails):
                                 result = True
             except:
                 pass
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # 3.7 Ensure a log metric filter and alarm exist for disabling or scheduled deletion of customer created CMKs (Scored)
@@ -1388,7 +1453,9 @@ def control_3_7_ensure_log_metric_disabling_scheduled_delete_of_kms_cmk(cloudtra
                         logGroupName=group
                     )
                     for p in filters['metricFilters']:
-                        patterns = ["\$\.eventSource\s*=\s*\"?kms\.amazonaws\.com(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DisableKey(\"|\)|\s)", "\$\.eventName\s*=\s*\"?ScheduleKeyDeletion(\"|\)|\s)"]
+                        patterns = ["\$\.eventSource\s*=\s*\"?kms\.amazonaws\.com(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?DisableKey(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?ScheduleKeyDeletion(\"|\)|\s)"]
                         if find_in_string(patterns, str(p['filterPattern'])):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
@@ -1404,7 +1471,8 @@ def control_3_7_ensure_log_metric_disabling_scheduled_delete_of_kms_cmk(cloudtra
                                 result = True
             except:
                 pass
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # 3.8 Ensure a log metric filter and alarm exist for S3 bucket policy changes (Scored)
@@ -1431,7 +1499,16 @@ def control_3_8_ensure_log_metric_s3_bucket_policy_changes(cloudtrails):
                         logGroupName=group
                     )
                     for p in filters['metricFilters']:
-                        patterns = ["\$\.eventSource\s*=\s*\"?s3\.amazonaws\.com(\"|\)|\s)", "\$\.eventName\s*=\s*\"?PutBucketAcl(\"|\)|\s)", "\$\.eventName\s*=\s*\"?PutBucketPolicy(\"|\)|\s)", "\$\.eventName\s*=\s*\"?PutBucketCors(\"|\)|\s)", "\$\.eventName\s*=\s*\"?PutBucketLifecycle(\"|\)|\s)", "\$\.eventName\s*=\s*\"?PutBucketReplication(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeleteBucketPolicy(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeleteBucketCors(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeleteBucketLifecycle(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeleteBucketReplication(\"|\)|\s)"]
+                        patterns = ["\$\.eventSource\s*=\s*\"?s3\.amazonaws\.com(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?PutBucketAcl(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?PutBucketPolicy(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?PutBucketCors(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?PutBucketLifecycle(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?PutBucketReplication(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?DeleteBucketPolicy(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?DeleteBucketCors(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?DeleteBucketLifecycle(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?DeleteBucketReplication(\"|\)|\s)"]
                         if find_in_string(patterns, str(p['filterPattern'])):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
@@ -1447,7 +1524,8 @@ def control_3_8_ensure_log_metric_s3_bucket_policy_changes(cloudtrails):
                                 result = True
             except:
                 pass
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # 3.9 Ensure a log metric filter and alarm exist for AWS Config configuration changes (Scored)
@@ -1474,7 +1552,11 @@ def control_3_9_ensure_log_metric_config_configuration_changes(cloudtrails):
                         logGroupName=group
                     )
                     for p in filters['metricFilters']:
-                        patterns = ["\$\.eventSource\s*=\s*\"?config\.amazonaws\.com(\"|\)|\s)", "\$\.eventName\s*=\s*\"?StopConfigurationRecorder(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeleteDeliveryChannel(\"|\)|\s)", "\$\.eventName\s*=\s*\"?PutDeliveryChannel(\"|\)|\s)", "\$\.eventName\s*=\s*\"?PutConfigurationRecorder(\"|\)|\s)"]
+                        patterns = ["\$\.eventSource\s*=\s*\"?config\.amazonaws\.com(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?StopConfigurationRecorder(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?DeleteDeliveryChannel(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?PutDeliveryChannel(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?PutConfigurationRecorder(\"|\)|\s)"]
                         if find_in_string(patterns, str(p['filterPattern'])):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
@@ -1490,7 +1572,8 @@ def control_3_9_ensure_log_metric_config_configuration_changes(cloudtrails):
                                 result = True
             except:
                 pass
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # 3.10 Ensure a log metric filter and alarm exist for security group changes (Scored)
@@ -1517,7 +1600,12 @@ def control_3_10_ensure_log_metric_security_group_changes(cloudtrails):
                         logGroupName=group
                     )
                     for p in filters['metricFilters']:
-                        patterns = ["\$\.eventName\s*=\s*\"?AuthorizeSecurityGroupIngress(\"|\)|\s)", "\$\.eventName\s*=\s*\"?AuthorizeSecurityGroupEgress(\"|\)|\s)", "\$\.eventName\s*=\s*\"?RevokeSecurityGroupIngress(\"|\)|\s)", "\$\.eventName\s*=\s*\"?RevokeSecurityGroupEgress(\"|\)|\s)", "\$\.eventName\s*=\s*\"?CreateSecurityGroup(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeleteSecurityGroup(\"|\)|\s)"]
+                        patterns = ["\$\.eventName\s*=\s*\"?AuthorizeSecurityGroupIngress(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?AuthorizeSecurityGroupEgress(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?RevokeSecurityGroupIngress(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?RevokeSecurityGroupEgress(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?CreateSecurityGroup(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?DeleteSecurityGroup(\"|\)|\s)"]
                         if find_in_string(patterns, str(p['filterPattern'])):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
@@ -1533,7 +1621,8 @@ def control_3_10_ensure_log_metric_security_group_changes(cloudtrails):
                                 result = True
             except:
                 pass
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # 3.11 Ensure a log metric filter and alarm exist for changes to Network Access Control Lists (NACL) (Scored)
@@ -1560,7 +1649,12 @@ def control_3_11_ensure_log_metric_nacl(cloudtrails):
                         logGroupName=group
                     )
                     for p in filters['metricFilters']:
-                        patterns = ["\$\.eventName\s*=\s*\"?CreateNetworkAcl(\"|\)|\s)", "\$\.eventName\s*=\s*\"?CreateNetworkAclEntry(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeleteNetworkAcl(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeleteNetworkAclEntry(\"|\)|\s)", "\$\.eventName\s*=\s*\"?ReplaceNetworkAclEntry(\"|\)|\s)", "\$\.eventName\s*=\s*\"?ReplaceNetworkAclAssociation(\"|\)|\s)"]
+                        patterns = ["\$\.eventName\s*=\s*\"?CreateNetworkAcl(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?CreateNetworkAclEntry(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?DeleteNetworkAcl(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?DeleteNetworkAclEntry(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?ReplaceNetworkAclEntry(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?ReplaceNetworkAclAssociation(\"|\)|\s)"]
                         if find_in_string(patterns, str(p['filterPattern'])):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
@@ -1576,7 +1670,8 @@ def control_3_11_ensure_log_metric_nacl(cloudtrails):
                                 result = True
             except:
                 pass
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # 3.12 Ensure a log metric filter and alarm exist for changes to network gateways (Scored)
@@ -1603,7 +1698,12 @@ def control_3_12_ensure_log_metric_changes_to_network_gateways(cloudtrails):
                         logGroupName=group
                     )
                     for p in filters['metricFilters']:
-                        patterns = ["\$\.eventName\s*=\s*\"?CreateCustomerGateway(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeleteCustomerGateway(\"|\)|\s)", "\$\.eventName\s*=\s*\"?AttachInternetGateway(\"|\)|\s)", "\$\.eventName\s*=\s*\"?CreateInternetGateway(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeleteInternetGateway(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DetachInternetGateway(\"|\)|\s)"]
+                        patterns = ["\$\.eventName\s*=\s*\"?CreateCustomerGateway(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?DeleteCustomerGateway(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?AttachInternetGateway(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?CreateInternetGateway(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?DeleteInternetGateway(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?DetachInternetGateway(\"|\)|\s)"]
                         if find_in_string(patterns, str(p['filterPattern'])):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
@@ -1619,7 +1719,8 @@ def control_3_12_ensure_log_metric_changes_to_network_gateways(cloudtrails):
                                 result = True
             except:
                 pass
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # 3.13 Ensure a log metric filter and alarm exist for route table changes (Scored)
@@ -1646,7 +1747,13 @@ def control_3_13_ensure_log_metric_changes_to_route_tables(cloudtrails):
                         logGroupName=group
                     )
                     for p in filters['metricFilters']:
-                        patterns = ["\$\.eventName\s*=\s*\"?CreateRoute(\"|\)|\s)", "\$\.eventName\s*=\s*\"?CreateRouteTable(\"|\)|\s)", "\$\.eventName\s*=\s*\"?ReplaceRoute(\"|\)|\s)", "\$\.eventName\s*=\s*\"?ReplaceRouteTableAssociation(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeleteRouteTable(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeleteRoute(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DisassociateRouteTable(\"|\)|\s)"]
+                        patterns = ["\$\.eventName\s*=\s*\"?CreateRoute(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?CreateRouteTable(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?ReplaceRoute(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?ReplaceRouteTableAssociation(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?DeleteRouteTable(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?DeleteRoute(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?DisassociateRouteTable(\"|\)|\s)"]
                         if find_in_string(patterns, str(p['filterPattern'])):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
@@ -1662,7 +1769,8 @@ def control_3_13_ensure_log_metric_changes_to_route_tables(cloudtrails):
                                 result = True
             except:
                 pass
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # 3.14 Ensure a log metric filter and alarm exist for VPC changes (Scored)
@@ -1689,7 +1797,17 @@ def control_3_14_ensure_log_metric_changes_to_vpc(cloudtrails):
                         logGroupName=group
                     )
                     for p in filters['metricFilters']:
-                        patterns = ["\$\.eventName\s*=\s*\"?CreateVpc(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeleteVpc(\"|\)|\s)", "\$\.eventName\s*=\s*\"?ModifyVpcAttribute(\"|\)|\s)", "\$\.eventName\s*=\s*\"?AcceptVpcPeeringConnection(\"|\)|\s)", "\$\.eventName\s*=\s*\"?CreateVpcPeeringConnection(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DeleteVpcPeeringConnection(\"|\)|\s)", "\$\.eventName\s*=\s*\"?RejectVpcPeeringConnection(\"|\)|\s)", "\$\.eventName\s*=\s*\"?AttachClassicLinkVpc(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DetachClassicLinkVpc(\"|\)|\s)", "\$\.eventName\s*=\s*\"?DisableVpcClassicLink(\"|\)|\s)", "\$\.eventName\s*=\s*\"?EnableVpcClassicLink(\"|\)|\s)"]
+                        patterns = ["\$\.eventName\s*=\s*\"?CreateVpc(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?DeleteVpc(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?ModifyVpcAttribute(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?AcceptVpcPeeringConnection(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?CreateVpcPeeringConnection(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?DeleteVpcPeeringConnection(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?RejectVpcPeeringConnection(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?AttachClassicLinkVpc(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?DetachClassicLinkVpc(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?DisableVpcClassicLink(\"|\)|\s)",
+                                    "\$\.eventName\s*=\s*\"?EnableVpcClassicLink(\"|\)|\s)"]
                         if find_in_string(patterns, str(p['filterPattern'])):
                             cwclient = boto3.client('cloudwatch', region_name=m)
                             response = cwclient.describe_alarms_for_metric(
@@ -1705,7 +1823,8 @@ def control_3_14_ensure_log_metric_changes_to_vpc(cloudtrails):
                                 result = True
             except:
                 pass
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # 3.15 Ensure appropriate subscribers to each SNS topic (Not Scored)
@@ -1722,7 +1841,8 @@ def control_3_15_verify_sns_subscribers():
     description = "Ensure appropriate subscribers to each SNS topic, please verify manually"
     scored = False
     failReason = "Control not implemented using API, please verify manually"
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # --- Networking ---
@@ -1756,7 +1876,8 @@ def control_4_1_ensure_ssh_not_open_to_world(regions):
                             result = False
                             failReason = "Found Security Group with port 22 open to the world (0.0.0.0/0)"
                             offenders.append(str(n) + " : " + str(m['GroupId']))
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # 4.2 Ensure no security groups allow ingress from 0.0.0.0/0 to port 3389 (Scored)
@@ -1788,7 +1909,8 @@ def control_4_2_ensure_rdp_not_open_to_world(regions):
                             result = False
                             failReason = "Found Security Group with port 3389 open to the world (0.0.0.0/0)"
                             offenders.append(str(n) + " : " + str(m['GroupId']))
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # 4.3 Ensure VPC flow logging is enabled in all VPCs (Scored)
@@ -1828,7 +1950,8 @@ def control_4_3_ensure_flow_logs_enabled_on_all_vpc(regions):
                 result = False
                 failReason = "VPC without active VPC Flow Logs found"
                 offenders.append(str(n) + " : " + str(m['VpcId']))
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # 4.4 Ensure the default security group of every VPC restricts all traffic (Scored)
@@ -1861,7 +1984,8 @@ def control_4_4_ensure_default_security_groups_restricts_traffic(regions):
                 result = False
                 failReason = "Default security groups with ingress or egress rules discovered"
                 offenders.append(str(n) + " : " + str(m['GroupId']))
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # 4.5 Ensure routing tables for VPC peering are "least access" (Not Scored)
@@ -1890,7 +2014,8 @@ def control_4_5_ensure_route_tables_are_least_access(regions):
                             offenders.append(str(n) + " : " + str(m['RouteTableId']))
                 except:
                     pass
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # 4.5 Ensure routing tables for VPC peering are "least access" (Not Scored)
@@ -1919,7 +2044,8 @@ def control_4_5_ensure_route_tables_are_least_access(regions):
                             offenders.append(str(n) + " : " + str(m['RouteTableId']))
                 except:
                     pass
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
 
 
 # --- Central functions ---
@@ -2086,12 +2212,14 @@ def json2html(controlResult, account):
     """
     table = []
     shortReport = shortAnnotation(controlResult)
-    table.append("<html>\n<head>\n<style>\n\n.table-outer {\n    background-color: #eaeaea;\n    border: 3px solid darkgrey;\n}\n\n.table-inner {\n    background-color: white;\n    border: 3px solid darkgrey;\n}\n\n.table-hover tr{\nbackground: transparent;\n}\n\n.table-hover tr:hover {\nbackground-color: lightgrey;\n}\n\ntable, tr, td, th{\n    line-height: 1.42857143;\n    vertical-align: top;\n    border: 1px solid darkgrey;\n    border-spacing: 0;\n    border-collapse: collapse;\n    width: auto;\n    max-width: auto;\n    background-color: transparent;\n    padding: 5px;\n}\n\ntable th {\n    padding-right: 20px;\n    text-align: left;\n}\n\ntd {\n    width:100%;\n}\n\ndiv.centered\n{\n  position: absolute;\n  width: auto;\n  height: auto;\n  z-index: 15;\n  top: 10%;\n  left: 20%;\n  right: 20%;\n  background: white;\n}\n\ndiv.centered table\n{\n    margin: auto;\n    text-align: left;\n}\n</style>\n</head>\n<body>\n<h1 style=\"text-align: center;\">AWS CIS Foundation Framework</h1>\n<div class=\"centered\">")
+    table.append(
+        "<html>\n<head>\n<style>\n\n.table-outer {\n    background-color: #eaeaea;\n    border: 3px solid darkgrey;\n}\n\n.table-inner {\n    background-color: white;\n    border: 3px solid darkgrey;\n}\n\n.table-hover tr{\nbackground: transparent;\n}\n\n.table-hover tr:hover {\nbackground-color: lightgrey;\n}\n\ntable, tr, td, th{\n    line-height: 1.42857143;\n    vertical-align: top;\n    border: 1px solid darkgrey;\n    border-spacing: 0;\n    border-collapse: collapse;\n    width: auto;\n    max-width: auto;\n    background-color: transparent;\n    padding: 5px;\n}\n\ntable th {\n    padding-right: 20px;\n    text-align: left;\n}\n\ntd {\n    width:100%;\n}\n\ndiv.centered\n{\n  position: absolute;\n  width: auto;\n  height: auto;\n  z-index: 15;\n  top: 10%;\n  left: 20%;\n  right: 20%;\n  background: white;\n}\n\ndiv.centered table\n{\n    margin: auto;\n    text-align: left;\n}\n</style>\n</head>\n<body>\n<h1 style=\"text-align: center;\">AWS CIS Foundation Framework</h1>\n<div class=\"centered\">")
     table.append("<table class=\"table table-inner\">")
     table.append("<tr><td>Account: " + account + "</td></tr>")
     table.append("<tr><td>Report date: " + time.strftime("%c") + "</td></tr>")
     table.append("<tr><td>Benchmark version: " + AWS_CIS_BENCHMARK_VERSION + "</td></tr>")
-    table.append("<tr><td>Whitepaper location: <a href=\"https://d0.awsstatic.com/whitepapers/compliance/AWS_CIS_Foundations_Benchmark.pdf\" target=\"_blank\">https://d0.awsstatic.com/whitepapers/compliance/AWS_CIS_Foundations_Benchmark.pdf</a></td></tr>")
+    table.append(
+        "<tr><td>Whitepaper location: <a href=\"https://d0.awsstatic.com/whitepapers/compliance/AWS_CIS_Foundations_Benchmark.pdf\" target=\"_blank\">https://d0.awsstatic.com/whitepapers/compliance/AWS_CIS_Foundations_Benchmark.pdf</a></td></tr>")
     table.append("<tr><td>" + shortReport + "</td></tr></table><br><br>")
     tableHeadOuter = "<table class=\"table table-outer\">"
     tableHeadInner = "<table class=\"table table-inner\">"
@@ -2106,11 +2234,13 @@ def json2html(controlResult, account):
                 resultStyle = " style=\"background-color:#ffff99;\""
             else:
                 resultStyle = " style=\"background-color:lightgreen;\""
-            table.append("<tr><th" + resultStyle + ">" + controlResult[m][n]['ControlId'].split('.')[1] + "</th><td>" + tableHeadHover)
+            table.append("<tr><th" + resultStyle + ">" + controlResult[m][n]['ControlId'].split('.')[
+                1] + "</th><td>" + tableHeadHover)
             table.append("<tr><th>ControlId</th><td>" + controlResult[m][n]['ControlId'] + "</td></tr>")
             table.append("<tr><th>Description</th><td>" + controlResult[m][n]['Description'] + "</td></tr>")
             table.append("<tr><th>failReason</th><td>" + controlResult[m][n]['failReason'] + "</td></tr>")
-            table.append("<tr><th>Offenders</th><td><ul>" + str(controlResult[m][n]['Offenders']).replace("', ", "',<br>") + "</ul></td></tr>")
+            table.append("<tr><th>Offenders</th><td><ul>" + str(controlResult[m][n]['Offenders']).replace("', ",
+                                                                                                          "',<br>") + "</ul></td></tr>")
             table.append("<tr><th>Result</th><td>" + str(controlResult[m][n]['Result']) + "</td></tr>")
             table.append("<tr><th>ScoredControl</th><td>" + str(controlResult[m][n]['ScoredControl']) + "</td></tr>")
             table.append("</table></td></tr>")
