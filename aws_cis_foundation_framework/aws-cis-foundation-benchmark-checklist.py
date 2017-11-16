@@ -9,6 +9,9 @@ Attributes:
     S3_WEB_REPORT (bool): Description
     S3_WEB_REPORT_BUCKET (str): Description
     S3_WEB_REPORT_EXPIRE (str): Description
+    S3_JSON_REPORT (bool): Description
+    S3_JSON_REPORT_BUCKET (str): Description
+    S3_JSON_REPORT_EXPIRE (str): Description
     S3_WEB_REPORT_OBFUSCATE_ACCOUNT (bool): Description
     SCRIPT_OUTPUT_JSON (bool): Description
 """
@@ -62,6 +65,10 @@ S3_JSON_REPORT = False
 
 # bucket to send json reports to
 S3_JSON_REPORT_BUCKET = "CHANGE_ME_TO_YOUR_S3_BUCKET"
+
+# How many hours should the report be available? Default = 168h/7days
+S3_JSON_REPORT_EXPIRE = "168"
+
 
 # Would you like to supress all output except JSON result?
 # Can be used when you want to pipe result to another system.
@@ -2184,15 +2191,15 @@ def s3jsonreport(controlResult, account):
             f.flush()
     try:
         f.close()
-        S3_CLIENT.upload_file(f.name, S3_WEB_REPORT_BUCKET, reportName)
+        S3_CLIENT.upload_file(f.name, S3_JSON_REPORT_BUCKET, reportName)
         os.unlink(f.name)
     except Exception as e:
         return "Failed to upload json report to S3 because: " + str(e)
-    ttl = int(S3_WEB_REPORT_EXPIRE) * 60
+    ttl = int(S3_JSON_REPORT_EXPIRE) * 60
     signedURL = S3_CLIENT.generate_presigned_url(
         'get_object',
         Params={
-            'Bucket': S3_WEB_REPORT_BUCKET,
+            'Bucket': S3_JSON_REPORT_BUCKET,
             'Key': reportName
         },
         ExpiresIn=ttl)
