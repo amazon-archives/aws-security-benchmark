@@ -1,0 +1,4 @@
+elasticsearch
+requests_aws4auth
+jsonpath_ng
+
