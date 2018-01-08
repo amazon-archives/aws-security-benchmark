@@ -1893,35 +1893,6 @@ def control_4_5_ensure_route_tables_are_least_access(regions):
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
 
 
-# 4.5 Ensure routing tables for VPC peering are "least access" (Not Scored)
-def control_4_5_ensure_route_tables_are_least_access(regions):
-    """Summary
-
-    Returns:
-        TYPE: Description
-    """
-    result = True
-    failReason = ""
-    offenders = []
-    control = "4.5"
-    description = "Ensure routing tables for VPC peering are least access"
-    scored = False
-    for n in regions:
-        client = boto3.client('ec2', region_name=n)
-        response = client.describe_route_tables()
-        for m in response['RouteTables']:
-            for o in m['Routes']:
-                try:
-                    if o['VpcPeeringConnectionId']:
-                        if int(str(o['DestinationCidrBlock']).split("/", 1)[1]) < 24:
-                            result = False
-                            failReason = "Large CIDR block routed to peer discovered, please investigate"
-                            offenders.append(str(n) + " : " + str(m['RouteTableId']))
-                except:
-                    pass
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
-
-
 # --- Central functions ---
 
 def get_cred_report():
