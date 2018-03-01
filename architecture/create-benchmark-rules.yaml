@@ -295,7 +295,7 @@
                             'ComplianceResourceType': 'AWS::::Account',
                             'ComplianceResourceId': 'Root',
                             'ComplianceType': 'COMPLIANT' if is_compliant else 'NON_COMPLIANT',
-                            'Annotation': annotation+"<--Results",
+                            'Annotation': annotation+"EvaluationComplete",
                             'OrderingTimestamp': datetime.datetime.now(),
                         },
                     ],
