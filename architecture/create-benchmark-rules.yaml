@@ -265,7 +265,7 @@
                 # Determine whether the root account uses hardware-based MFA.
                 mfa_devices = client.list_virtual_mfa_devices()['VirtualMFADevices']
                 for mfa_device in mfa_devices:
-                    if not 'SerialNumber' in mfa_device:
+                    if 'User' in mfa_device and not mfa_device['User']['Arn'].endswith('mfa/root-account-mfa-device'):
                         is_compliant = is_compliant and True
                     else:
                         is_compliant = is_compliant and False
