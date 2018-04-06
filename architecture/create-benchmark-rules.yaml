@@ -265,7 +265,7 @@
                 # Determine whether the root account uses hardware-based MFA.
                 mfa_devices = client.list_virtual_mfa_devices()['VirtualMFADevices']
                 for mfa_device in mfa_devices:
-                    if not 'SerialNumber' in mfa_device:
+                    if 'SerialNumber' in mfa_device:
                         is_compliant = is_compliant and True
                     else:
                         is_compliant = is_compliant and False
@@ -288,19 +288,20 @@
                             annotation = annotation + ' The root account has active access keys associated with it.'
                         break
 
-                config = boto3.client('config')
-                config.put_evaluations(
-                    Evaluations=[
-                        {
-                            'ComplianceResourceType': 'AWS::::Account',
-                            'ComplianceResourceId': 'Root',
-                            'ComplianceType': 'COMPLIANT' if is_compliant else 'NON_COMPLIANT',
-                            'Annotation': annotation,
-                            'OrderingTimestamp': datetime.datetime.now(),
-                        },
-                    ],
-                    ResultToken=result_token
-                )
+                evaluations = [
+                    {
+                       'ComplianceResourceType': 'AWS::::Account',
+                       'ComplianceResourceId': 'Root',
+                       'ComplianceType': 'COMPLIANT' if is_compliant else 'NON_COMPLIANT',
+                       'OrderingTimestamp': datetime.datetime.now(),
+                    }
+                ]
+
+                if annotation: evaluations[0]['Annotation'] = annotation
+
+                response = boto3.client('config').put_evaluations(
+                   Evaluations = evaluations,
+                   ResultToken = result_token)
 
         Description: Evaluates the security properties of the root account
         Handler: index.lambda_handler
