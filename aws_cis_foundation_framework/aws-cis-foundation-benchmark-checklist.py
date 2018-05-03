@@ -697,7 +697,7 @@ def control_1_21_ensure_iam_instance_roles_used():
 
 
 # 1.22 Ensure a support role has been created to manage incidents with AWS Support (Scored)
-def control_1_22_ensure_incident_management_roles():
+def control_1_22_ensure_incident_management_roles(partition):
     """Summary
 
     Returns:
@@ -712,7 +712,7 @@ def control_1_22_ensure_incident_management_roles():
     offenders = []
     try:
         response = IAM_CLIENT.list_entities_for_policy(
-            PolicyArn='arn:aws:iam::aws:policy/AWSSupportAccess'
+            PolicyArn='arn:{0}:iam::aws:policy/AWSSupportAccess'.format(partition)
         )
         if (len(response['PolicyGroups']) + len(response['PolicyUsers']) + len(response['PolicyRoles'])) == 0:
             result = False
@@ -908,7 +908,7 @@ def control_2_3_ensure_cloudtrail_bucket_not_public(cloudtrails):
 
 
 # 2.4 Ensure CloudTrail trails are integrated with CloudWatch Logs (Scored)
-def control_2_4_ensure_cloudtrail_cloudwatch_logs_integration(cloudtrails):
+def control_2_4_ensure_cloudtrail_cloudwatch_logs_integration(cloudtrails, partition):
     """Summary
 
     Args:
@@ -926,7 +926,7 @@ def control_2_4_ensure_cloudtrail_cloudwatch_logs_integration(cloudtrails):
     for m, n in cloudtrails.iteritems():
         for o in n:
             try:
-                if "arn:aws:logs" in o['CloudWatchLogsLogGroupArn']:
+                if "arn:{0}:logs".format(partition) in o['CloudWatchLogsLogGroupArn']:
                     pass
                 else:
                     result = False
@@ -1062,12 +1062,28 @@ def control_2_7_ensure_cloudtrail_encryption_kms(cloudtrails):
     scored = True
     for m, n in cloudtrails.iteritems():
         for o in n:
-            try:
-                if o['KmsKeyId']:
-                    pass
-            except:
+            if 'KmsKeyId' in o:
+                pass
+            s3_client = boto3.client('s3', region_name=m)
+            kms_client = boto3.client('kms', region_name=m)
+            S3BucketName = o['S3BucketName']
+            bucket_encryption = s3_client.get_bucket_encryption(Bucket=S3BucketName)
+            KMSMasterKeyID = bucket_encryption['ServerSideEncryptionConfiguration']['Rules'][0]['ApplyServerSideEncryptionByDefault']['KMSMasterKeyID']
+            TargetKeyId = KMSMasterKeyID.split("/")[1]
+            SSEAlgorithm = bucket_encryption['ServerSideEncryptionConfiguration']['Rules'][0]['ApplyServerSideEncryptionByDefault']['SSEAlgorithm']
+            kms_response = kms_client.list_keys()
+            for key in kms_response['Keys']:
+                if key['KeyArn'] == KMSMasterKeyID:
+                    bucket_key = key
+            alias_response = kms_client.list_aliases()
+            for alias in alias_response['Aliases']:
+                if 'TargetKeyId' in alias and alias['TargetKeyId'] == TargetKeyId:
+                    CMKAlias = alias["AliasName"]
+            if SSEAlgorithm == 'aws:kms' and "aws/" not in CMKAlias:
+                pass
+            else:
                 result = False
-                failReason = "CloudTrail not using KMS CMK for encryption discovered"
+                failReason = "CloudTrail not using KMS CMK for encryption or default server side encryption on the s3 bucket does not use KMS CMK"
                 offenders.append("Trail:" + str(o['TrailARN']))
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
 
@@ -1975,17 +1991,32 @@ def get_account_password_policy():
             return False
 
 
-def get_regions():
+def get_regions(partition):
     """Summary
 
     Returns:
         TYPE: Description
     """
-    client = boto3.client('ec2')
-    region_response = client.describe_regions()
-    regions = [region['RegionName'] for region in region_response['Regions']]
+    regions = boto3.session.Session().get_available_regions(service_name='ec2', partition_name=partition)
     return regions
 
+def get_partition():
+    """Determine Partition from Default Session to support AWS GovCloud and China
+
+    Returns:
+        Partion to use based on supplied region
+    """
+    session = boto3.session.Session()
+    default_region = boto3.session.Session().region_name
+    if "us-gov" in default_region:
+        partition = 'aws-us-gov'
+        return partition
+    elif "us-cn" in default_region:
+        partition = 'aws-cn'
+        return partition
+    else:
+        partition = 'aws'
+        return partition
 
 def get_cloudtrails(regions):
     """Summary
@@ -2256,7 +2287,8 @@ def lambda_handler(event, context):
         configRule = False
 
     # Globally used resources
-    region_list = get_regions()
+    partition = get_partition()
+    region_list = get_regions(partition)
     cred_report = get_cred_report()
     password_policy = get_account_password_policy()
     cloud_trails = get_cloudtrails(region_list)
@@ -2282,11 +2314,11 @@ def lambda_handler(event, context):
     control1.append(control_1_15_security_questions_registered())
     control1.append(control_1_16_no_policies_on_iam_users())
     control1.append(control_1_17_detailed_billing_enabled())
-    control1.append(control_1_18_ensure_iam_master_and_manager_roles())
     control1.append(control_1_19_maintain_current_contact_details())
+    control1.append(control_1_18_ensure_iam_master_and_manager_roles())
     control1.append(control_1_20_ensure_security_contact_details())
     control1.append(control_1_21_ensure_iam_instance_roles_used())
-    control1.append(control_1_22_ensure_incident_management_roles())
+    control1.append(control_1_22_ensure_incident_management_roles(partition))
     control1.append(control_1_23_no_active_initial_access_keys_with_iam_user(cred_report))
     control1.append(control_1_24_no_overly_permissive_policies())
 
@@ -2294,7 +2326,7 @@ def lambda_handler(event, context):
     control2.append(control_2_1_ensure_cloud_trail_all_regions(cloud_trails))
     control2.append(control_2_2_ensure_cloudtrail_validation(cloud_trails))
     control2.append(control_2_3_ensure_cloudtrail_bucket_not_public(cloud_trails))
-    control2.append(control_2_4_ensure_cloudtrail_cloudwatch_logs_integration(cloud_trails))
+    control2.append(control_2_4_ensure_cloudtrail_cloudwatch_logs_integration(cloud_trails, partition))
     control2.append(control_2_5_ensure_config_all_regions(region_list))
     control2.append(control_2_6_ensure_cloudtrail_bucket_logging(cloud_trails))
     control2.append(control_2_7_ensure_cloudtrail_encryption_kms(cloud_trails))
@@ -2323,7 +2355,6 @@ def lambda_handler(event, context):
     control4.append(control_4_3_ensure_flow_logs_enabled_on_all_vpc(region_list))
     control4.append(control_4_4_ensure_default_security_groups_restricts_traffic(region_list))
     control4.append(control_4_5_ensure_route_tables_are_least_access(region_list))
-
     # Join results
     controls = []
     controls.append(control1)
