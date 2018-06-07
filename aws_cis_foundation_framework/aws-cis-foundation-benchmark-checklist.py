@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """Summary
 
 Attributes:
@@ -13,7 +15,7 @@ Attributes:
     SCRIPT_OUTPUT_JSON (bool): Description
 """
 
-from __future__ import print_function
+
 
 import csv
 import getopt
@@ -813,7 +815,7 @@ def control_1_24_no_overly_permissive_policies():
 
         for n in statements:
             # a policy statement has to contain either an Action or a NotAction
-            if 'Action' in n.keys() and n['Effect'] == 'Allow':
+            if 'Action' in list(n.keys()) and n['Effect'] == 'Allow':
                 if ("'*'" in str(n['Action']) or str(n['Action']) == "*") and (
                         "'*'" in str(n['Resource']) or str(n['Resource']) == "*"):
                     result = False
@@ -841,7 +843,7 @@ def control_2_1_ensure_cloud_trail_all_regions(cloudtrails):
     control = "2.1"
     description = "Ensure CloudTrail is enabled in all regions"
     scored = True
-    for m, n in cloudtrails.iteritems():
+    for m, n in cloudtrails.items():
         for o in n:
             if o['IsMultiRegionTrail']:
                 client = boto3.client('cloudtrail', region_name=m)
@@ -873,7 +875,7 @@ def control_2_2_ensure_cloudtrail_validation(cloudtrails):
     control = "2.2"
     description = "Ensure CloudTrail log file validation is enabled"
     scored = True
-    for m, n in cloudtrails.iteritems():
+    for m, n in cloudtrails.items():
         for o in n:
             if o['LogFileValidationEnabled'] is False:
                 result = False
@@ -901,7 +903,7 @@ def control_2_3_ensure_cloudtrail_bucket_not_public(cloudtrails):
     control = "2.3"
     description = "Ensure the S3 bucket CloudTrail logs to is not publicly accessible"
     scored = True
-    for m, n in cloudtrails.iteritems():
+    for m, n in cloudtrails.items():
         for o in n:
             #  We only want to check cases where there is a bucket
             if "S3BucketName" in str(o):
@@ -952,7 +954,7 @@ def control_2_4_ensure_cloudtrail_cloudwatch_logs_integration(cloudtrails):
     control = "2.4"
     description = "Ensure CloudTrail trails are integrated with CloudWatch Logs"
     scored = True
-    for m, n in cloudtrails.iteritems():
+    for m, n in cloudtrails.items():
         for o in n:
             try:
                 if "arn:aws:logs" in o['CloudWatchLogsLogGroupArn']:
@@ -1056,7 +1058,7 @@ def control_2_6_ensure_cloudtrail_bucket_logging(cloudtrails):
     control = "2.6"
     description = "Ensure S3 bucket access logging is enabled on the CloudTrail S3 bucket"
     scored = True
-    for m, n in cloudtrails.iteritems():
+    for m, n in cloudtrails.items():
         for o in n:
             # it is possible to have a cloudtrail configured with a nonexistant bucket
             try:
@@ -1092,7 +1094,7 @@ def control_2_7_ensure_cloudtrail_encryption_kms(cloudtrails):
     control = "2.7"
     description = "Ensure CloudTrail logs are encrypted at rest using KMS CMKs"
     scored = True
-    for m, n in cloudtrails.iteritems():
+    for m, n in cloudtrails.items():
         for o in n:
             try:
                 if o['KmsKeyId']:
@@ -1155,7 +1157,7 @@ def control_3_1_ensure_log_metric_filter_unauthorized_api_calls(cloudtrails):
     description = "Ensure log metric filter unauthorized api calls"
     scored = True
     failReason = "Incorrect log metric alerts for unauthorized_api_calls"
-    for m, n in cloudtrails.iteritems():
+    for m, n in cloudtrails.items():
         for o in n:
             try:
                 if o['CloudWatchLogsLogGroupArn']:
@@ -1200,7 +1202,7 @@ def control_3_2_ensure_log_metric_filter_console_signin_no_mfa(cloudtrails):
     description = "Ensure a log metric filter and alarm exist for Management Console sign-in without MFA"
     scored = True
     failReason = "Incorrect log metric alerts for management console signin without MFA"
-    for m, n in cloudtrails.iteritems():
+    for m, n in cloudtrails.items():
         for o in n:
             try:
                 if o['CloudWatchLogsLogGroupArn']:
@@ -1245,7 +1247,7 @@ def control_3_3_ensure_log_metric_filter_root_usage(cloudtrails):
     description = "Ensure a log metric filter and alarm exist for root usage"
     scored = True
     failReason = "Incorrect log metric alerts for root usage"
-    for m, n in cloudtrails.iteritems():
+    for m, n in cloudtrails.items():
         for o in n:
             try:
                 if o['CloudWatchLogsLogGroupArn']:
@@ -1291,7 +1293,7 @@ def control_3_4_ensure_log_metric_iam_policy_change(cloudtrails):
     description = "Ensure a log metric filter and alarm exist for IAM changes"
     scored = True
     failReason = "Incorrect log metric alerts for IAM policy changes"
-    for m, n in cloudtrails.iteritems():
+    for m, n in cloudtrails.items():
         for o in n:
             try:
                 if o['CloudWatchLogsLogGroupArn']:
@@ -1350,7 +1352,7 @@ def control_3_5_ensure_log_metric_cloudtrail_configuration_changes(cloudtrails):
     description = "Ensure a log metric filter and alarm exist for CloudTrail configuration changes"
     scored = True
     failReason = "Incorrect log metric alerts for CloudTrail configuration changes"
-    for m, n in cloudtrails.iteritems():
+    for m, n in cloudtrails.items():
         for o in n:
             try:
                 if o['CloudWatchLogsLogGroupArn']:
@@ -1398,7 +1400,7 @@ def control_3_6_ensure_log_metric_console_auth_failures(cloudtrails):
     description = "Ensure a log metric filter and alarm exist for console auth failures"
     scored = True
     failReason = "Ensure a log metric filter and alarm exist for console auth failures"
-    for m, n in cloudtrails.iteritems():
+    for m, n in cloudtrails.items():
         for o in n:
             try:
                 if o['CloudWatchLogsLogGroupArn']:
@@ -1443,7 +1445,7 @@ def control_3_7_ensure_log_metric_disabling_scheduled_delete_of_kms_cmk(cloudtra
     description = "Ensure a log metric filter and alarm exist for disabling or scheduling deletion of KMS CMK"
     scored = True
     failReason = "Ensure a log metric filter and alarm exist for disabling or scheduling deletion of KMS CMK"
-    for m, n in cloudtrails.iteritems():
+    for m, n in cloudtrails.items():
         for o in n:
             try:
                 if o['CloudWatchLogsLogGroupArn']:
@@ -1489,7 +1491,7 @@ def control_3_8_ensure_log_metric_s3_bucket_policy_changes(cloudtrails):
     description = "Ensure a log metric filter and alarm exist for S3 bucket policy changes"
     scored = True
     failReason = "Ensure a log metric filter and alarm exist for S3 bucket policy changes"
-    for m, n in cloudtrails.iteritems():
+    for m, n in cloudtrails.items():
         for o in n:
             try:
                 if o['CloudWatchLogsLogGroupArn']:
@@ -1542,7 +1544,7 @@ def control_3_9_ensure_log_metric_config_configuration_changes(cloudtrails):
     description = "Ensure a log metric filter and alarm exist for for AWS Config configuration changes"
     scored = True
     failReason = "Ensure a log metric filter and alarm exist for for AWS Config configuration changes"
-    for m, n in cloudtrails.iteritems():
+    for m, n in cloudtrails.items():
         for o in n:
             try:
                 if o['CloudWatchLogsLogGroupArn']:
@@ -1590,7 +1592,7 @@ def control_3_10_ensure_log_metric_security_group_changes(cloudtrails):
     description = "Ensure a log metric filter and alarm exist for security group changes"
     scored = True
     failReason = "Ensure a log metric filter and alarm exist for security group changes"
-    for m, n in cloudtrails.iteritems():
+    for m, n in cloudtrails.items():
         for o in n:
             try:
                 if o['CloudWatchLogsLogGroupArn']:
@@ -1639,7 +1641,7 @@ def control_3_11_ensure_log_metric_nacl(cloudtrails):
     description = "Ensure a log metric filter and alarm exist for changes to Network Access Control Lists (NACL)"
     scored = True
     failReason = "Ensure a log metric filter and alarm exist for changes to Network Access Control Lists (NACL)"
-    for m, n in cloudtrails.iteritems():
+    for m, n in cloudtrails.items():
         for o in n:
             try:
                 if o['CloudWatchLogsLogGroupArn']:
@@ -1688,7 +1690,7 @@ def control_3_12_ensure_log_metric_changes_to_network_gateways(cloudtrails):
     description = "Ensure a log metric filter and alarm exist for changes to network gateways"
     scored = True
     failReason = "Ensure a log metric filter and alarm exist for changes to network gateways"
-    for m, n in cloudtrails.iteritems():
+    for m, n in cloudtrails.items():
         for o in n:
             try:
                 if o['CloudWatchLogsLogGroupArn']:
@@ -1737,7 +1739,7 @@ def control_3_13_ensure_log_metric_changes_to_route_tables(cloudtrails):
     description = "Ensure a log metric filter and alarm exist for route table changes"
     scored = True
     failReason = "Ensure a log metric filter and alarm exist for route table changes"
-    for m, n in cloudtrails.iteritems():
+    for m, n in cloudtrails.items():
         for o in n:
             try:
                 if o['CloudWatchLogsLogGroupArn']:
@@ -1787,7 +1789,7 @@ def control_3_14_ensure_log_metric_changes_to_vpc(cloudtrails):
     description = "Ensure a log metric filter and alarm exist for VPC changes"
     scored = True
     failReason = "Ensure a log metric filter and alarm exist for VPC changes"
-    for m, n in cloudtrails.iteritems():
+    for m, n in cloudtrails.items():
         for o in n:
             try:
                 if o['CloudWatchLogsLogGroupArn']:
