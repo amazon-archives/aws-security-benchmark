@@ -15,8 +15,6 @@ Attributes:
     SCRIPT_OUTPUT_JSON (bool): Description
 """
 
-
-
 import csv
 import getopt
 import json
@@ -986,10 +984,10 @@ def control_2_5_ensure_config_all_regions(regions):
     scored = True
     globalConfigCapture = False  # Only one region needs to capture global events
     for n in regions:
-        configClient = boto3.client('config', region_name=n)
-        response = configClient.describe_configuration_recorder_status()
-        # Get recording status
         try:
+            configClient = boto3.client('config', region_name=n)
+            response = configClient.describe_configuration_recorder_status()
+         # Get recording status
             if not response['ConfigurationRecordersStatus'][0]['recording'] is True:
                 result = False
                 failReason = "Config not enabled in all regions, not capturing all/global events or delivery channel errors"
@@ -998,10 +996,12 @@ def control_2_5_ensure_config_all_regions(regions):
             result = False
             failReason = "Config not enabled in all regions, not capturing all/global events or delivery channel errors"
             offenders.append(str(n) + ":NotRecording")
+            continue
 
         # Verify that each region is capturing all events
-        response = configClient.describe_configuration_recorders()
+
         try:
+            response = configClient.describe_configuration_recorders()
             if not response['ConfigurationRecorders'][0]['recordingGroup']['allSupported'] is True:
                 result = False
                 failReason = "Config not enabled in all regions, not capturing all/global events or delivery channel errors"
