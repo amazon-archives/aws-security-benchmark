@@ -34,7 +34,7 @@ AWS_CIS_BENCHMARK_VERSION = "1.1"
 
 # Would you like a HTML file generated with the result?
 # This file will be delivered using a signed URL.
-S3_WEB_REPORT = True
+S3_WEB_REPORT = False
 
 # Where should the report be delivered to?
 # Make sure to update permissions for the Lambda role if you change bucket name.
@@ -61,7 +61,7 @@ SCRIPT_OUTPUT_JSON = True
 # Would you like to supress all output except JSON result?
 # Can be used when you want to pipe result to another system.
 # If using S3 reporting, please enable SNS integration to get S3 signed URL
-OUTPUT_ONLY_JSON = False
+OUTPUT_ONLY_JSON = True
 
 # --- Control Parameters ---
 
@@ -2060,34 +2060,36 @@ def get_cred_report():
     """
     x = 0
     status = ""
-    while IAM_CLIENT.generate_credential_report()['State'] != "COMPLETE":
-        time.sleep(2)
-        x += 1
-        # If no credentail report is delivered within this time fail the check.
-        if x > 10:
-            status = "Fail: rootUse - no CredentialReport available."
-            break
-    if "Fail" in status:
-        return status
-    response = IAM_CLIENT.get_credential_report()
-    report = []
-    reader = csv.DictReader(response['Content'].splitlines(), delimiter=',')
-    for row in reader:
-        report.append(row)
-
-    # Verify if root key's never been used, if so add N/A
     try:
-        if report[0]['access_key_1_last_used_date']:
-            pass
-    except:
-        report[0]['access_key_1_last_used_date'] = "N/A"
-    try:
-        if report[0]['access_key_2_last_used_date']:
-            pass
-    except:
-        report[0]['access_key_2_last_used_date'] = "N/A"
-    return report
+        while IAM_CLIENT.generate_credential_report()['State'] != "COMPLETE":
+            time.sleep(2)
+            x += 1
+            # If no credential report is delivered within this time fail the check.
+            if x > 10:
+                return "Fail: rootUse - no CredentialReport available."
+        response = IAM_CLIENT.get_credential_report()
+        report = []
+        reportText=response['Content'].decode("utf-8").splitlines()
+        if not reportText:
+            return "Fail: Report is empty"
+        reader = csv.DictReader(reportText, delimiter=',')
+        for row in reader:
+            report.append(row)
 
+        # Verify if root key's never been used, if so add N/A
+        try:
+            if report[0]['access_key_1_last_used_date']:
+                pass
+        except:
+            report[0]['access_key_1_last_used_date'] = "N/A"
+        try:
+            if report[0]['access_key_2_last_used_date']:
+                pass
+        except:
+            report[0]['access_key_2_last_used_date'] = "N/A"
+        return report
+    except Exception as e:
+        return "Fail: Error retrieving data "+str(e)
 
 def get_account_password_policy():
     """Check if a IAM password policy exists, if not return false
