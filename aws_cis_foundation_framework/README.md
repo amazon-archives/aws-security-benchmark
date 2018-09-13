@@ -13,8 +13,7 @@ multiple accounts
 
 ## Execution
 ### Requirement
-Verified with Python 2.7.
-Python 3.6 support in process.
+Verified with Python 2.7. and 3.6.
 
 ### Config Rules
 By adding the script to you AWS account as a Lambda function you can tie it
