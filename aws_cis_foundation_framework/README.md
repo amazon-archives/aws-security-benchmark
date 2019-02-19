@@ -14,6 +14,7 @@ multiple accounts
 ## Execution
 ### Requirement
 Verified with Python 2.7.
+
 `verfied with Python 3.6.` ~~support in process.~~
 
 ### Config Rules
@@ -38,4 +39,11 @@ Specify profile by using the -p or --profile
 
 ## IAM Policy
 The IAM policy required to run the script is located in the file  
-aws-cis-foundation-benchmark-checklist-lambdarole.json  
+aws-cis-foundation-benchmark-checklist-lambdarole.json
+
+## changes
+* updated benchmarks for CIS 1.2
+* added mutiprocessing per benchmark set
+* json report to s3
+* added support for python 3
+* style optimization
