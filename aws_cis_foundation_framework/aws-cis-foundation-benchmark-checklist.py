@@ -39,6 +39,7 @@ S3_WEB_REPORT = True
 
 # Where should the report be delivered to?
 # Make sure to update permissions for the Lambda role if you change bucket name.
+# if S3_REPORT_BUCKET is not defined here, S3_REPORT_BUCKET environment variable will be taken into account.
 S3_REPORT_BUCKET = None
 
 # Create separate report files?
@@ -59,7 +60,10 @@ S3_WEB_REPORT_OBFUSCATE_ACCOUNT = False
 
 # Would  you like to send the report signedURL to an SNS topic
 SEND_REPORT_URL_TO_SNS = False
-SNS_TOPIC_ARN = "CHANGE_ME_TO_YOUR_TOPIC_ARN"
+
+# Set SNS_TOPIC_ARN to your SNS TOPIC.
+# If SNS_TOPIC_ARN is not set, SNS_TOPIC_ARN will be pulled from environment.
+SNS_TOPIC_ARN = None
 
 # Would you like to print the results as JSON to output?
 SCRIPT_OUTPUT_JSON = True
@@ -166,7 +170,8 @@ def control_1_1_root_use(resource):
         else:
             logger.error("Something went wrong")
 
-    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except #pylint: disable=broad-except
+    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders,
+     'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
 
 
 # 1.2 Ensure multi-factor authentication (MFA) is enabled for all IAM users that have a console password (Scored)
@@ -196,7 +201,8 @@ def control_1_2_mfa_on_password_enabled_iam(resource):
                 result = False
                 fail_reason = "No MFA on users with password. "
                 offenders.append(str(credreport[i]['arn']))
-    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
+    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders,
+     'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
 
 
 # 1.3 Ensure credentials unused for 90 days or greater are disabled (Scored)
@@ -254,7 +260,8 @@ def control_1_3_unused_credentials(resource):
             except:
                 # Never used
                 pass
-    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
+    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders,
+     'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
 
 
 # 1.4 Ensure access keys are rotated every 90 days or less (Scored)
@@ -321,7 +328,8 @@ def control_1_4_rotated_keys(resource):
                     offenders.append(str(credreport[i]['arn']) + ":unused key2")
             except:
                 pass
-    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
+    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders,
+    'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
 
 
 # 1.5 Ensure IAM password policy requires at least one uppercase letter (Scored)
@@ -349,7 +357,8 @@ def control_1_5_password_policy_uppercase(resource):
         if passwordpolicy['RequireUppercaseCharacters'] is False:
             result = False
             fail_reason = "Password policy does not require at least one uppercase letter"
-    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
+    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders,
+     'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
 
 
 # 1.6 Ensure IAM password policy requires at least one lowercase letter (Scored)
@@ -377,7 +386,8 @@ def control_1_6_password_policy_lowercase(resource):
         if passwordpolicy['RequireLowercaseCharacters'] is False:
             result = False
             fail_reason = "Password policy does not require at least one uppercase letter"
-    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
+    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders,
+     'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
 
 
 # 1.7 Ensure IAM password policy requires at least one symbol (Scored)
@@ -405,7 +415,8 @@ def control_1_7_password_policy_symbol(resource):
         if passwordpolicy['RequireSymbols'] is False:
             result = False
             fail_reason = "Password policy does not require at least one symbol"
-    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
+    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders,
+     'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
 
 
 # 1.8 Ensure IAM password policy requires at least one number (Scored)
@@ -433,7 +444,8 @@ def control_1_8_password_policy_number(resource):
         if passwordpolicy['RequireNumbers'] is False:
             result = False
             fail_reason = "Password policy does not require at least one number"
-    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
+    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders,
+     'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
 
 
 # 1.9 Ensure IAM password policy requires minimum length of 14 or greater (Scored)
@@ -461,7 +473,8 @@ def control_1_9_password_policy_length(resource):
         if passwordpolicy['MinimumPasswordLength'] < 14:
             result = False
             fail_reason = "Password policy does not require at least 14 characters"
-    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
+    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders,
+     'ScoredControl': scored, 'Description': description, 'ControlId': control}
 
 
 # 1.10 Ensure IAM password policy prevents password reuse (Scored)
@@ -495,7 +508,8 @@ def control_1_10_password_policy_reuse(resource):
         except:
             result = False
             fail_reason = "Password policy does not prevent reusing last 24 passwords"
-    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
+    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders,
+     'ScoredControl': scored, 'Description': description, 'ControlId': control}
 
 
 # 1.11 Ensure IAM password policy expires passwords within 90 days or less (Scored)
@@ -527,7 +541,8 @@ def control_1_11_password_policy_expire(resource):
         else:
             result = False
             fail_reason = "Password policy does not expire passwords after 90 days or less"
-    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
+    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders,
+     'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
 
 
 # 1.12 Ensure no root account access key exists (Scored)
@@ -552,7 +567,8 @@ def control_1_12_root_key_exists(resource):
     if (credreport[0]['access_key_1_active'] == "true") or (credreport[0]['access_key_2_active'] == "true"):
         result = False
         fail_reason = "Root have active access keys"
-    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
+    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders,
+     'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
 
 
 # 1.13 Ensure MFA is enabled for the "root" account (Scored)
@@ -573,7 +589,8 @@ def control_1_13_root_mfa_enabled(resource):
     if response['SummaryMap']['AccountMFAEnabled'] != 1:
         result = False
         fail_reason = "Root account not using MFA"
-    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
+    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders,
+    'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
 
 
 # 1.14 Ensure hardware MFA is enabled for the "root" account (Scored)
@@ -607,7 +624,8 @@ def control_1_14_root_hardware_mfa_enabled(resource):
     else:
         result = False
         fail_reason = "Root account not using MFA"
-    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
+    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders,
+     'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
 
 
 # 1.15 Ensure security questions are registered in the AWS account (Not Scored/Manual)
@@ -625,7 +643,8 @@ def control_1_15_security_questions_registered(resource):
     description = "Ensure security questions are registered in the AWS account, please verify manually"
     scored = False
     fail_reason = "Control not implemented using API, please verify manually"
-    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
+    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders,
+     'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
 
 
 # 1.16 Ensure IAM policies are attached only to groups or roles (Scored)
@@ -658,7 +677,8 @@ def control_1_16_no_policies_on_iam_users(resource):
             result = False
             fail_reason = "IAM user have inline policy attached"
             offenders.append(str(n['Arn']))
-    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
+    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders,
+     'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
 
 # 1.17 Maintain current contact details (not Scored)
 @time_decorator
@@ -675,7 +695,8 @@ def control_1_17_maintain_current_contact_details(resource):
     description = "Maintain current contact details, please verify manually"
     scored = False
     fail_reason = "Control not implemented using API, please verify manually"
-    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
+    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders,
+     'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
 
 
 # 1.18 Ensure security contact information is registered (not Scored)
@@ -693,7 +714,8 @@ def control_1_18_ensure_security_contact_details(resource):
     description = "Ensure security contact information is registered, please verify manually"
     scored = False
     fail_reason = "Control not implemented using API, please verify manually"
-    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
+    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders,
+     'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
 
 
 # 1.19 Ensure IAM instance roles are used for AWS resource access from instances (Scored)
@@ -720,7 +742,8 @@ def control_1_19_ensure_iam_instance_roles_used(resource):
         except:
                 result = False
                 offenders.append(str(response['Reservations'][n]['Instances'][0]['InstanceId']))
-    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
+    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders,
+     'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
 
 
 # 1.20 Ensure a support role has been created to manage incidents with AWS Support (Scored)
@@ -748,7 +771,8 @@ def control_1_20_ensure_incident_management_roles(resource):
     except:
         result = False
         fail_reason = "AWSSupportAccess policy not created"
-    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
+    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders,
+     'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
 
 
 # 1.21 Do not setup access keys during initial user setup for all IAM users that have a console password (Not Scored)
@@ -768,7 +792,8 @@ def control_1_21_no_active_initial_access_keys_with_iam_user(resource):
     scored = False
     offenders = []
     for n, _ in enumerate(credreport):
-        if (credreport[n]['access_key_1_active'] or credreport[n]['access_key_2_active'] == 'true') and n > 0:
+        if (credreport[n]['access_key_1_active'] or credreport[n]['access_key_2_active'] == 'true') and n > 0\
+                and credreport[n]['password_enabled'] == 'true':
             response = IAM_CLIENT.list_access_keys(
                 UserName=str(credreport[n]['user'])
             )
@@ -777,7 +802,8 @@ def control_1_21_no_active_initial_access_keys_with_iam_user(resource):
                     result = False
                     fail_reason = "Users with keys created at user creation time found"
                     offenders.append(str(credreport[n]['arn']) + ":" + str(m['AccessKeyId']))
-    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
+    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders,
+    'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
 
 
 # 1.22  Ensure IAM policies that allow full "*:*" administrative privileges are not created (Scored)
@@ -825,7 +851,8 @@ def control_1_22_no_overly_permissive_policies(resource):
                     result = False
                     fail_reason = "Found full administrative policy"
                     offenders.append(str(m['Arn']))
-    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
+    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders,
+     'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
 
 
 # --- 2 Logging ---
@@ -860,7 +887,8 @@ def control_2_1_ensure_cloud_trail_all_regions(resource):
                     break
     if result is False:
         fail_reason = "No enabled multi region trails found"
-    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
+    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders,
+     'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
 
 
 # 2.2 Ensure CloudTrail log file validation is enabled (Scored)
@@ -889,7 +917,8 @@ def control_2_2_ensure_cloudtrail_validation(resource):
                 offenders.append(str(o['TrailARN']))
     offenders = set(offenders)
     offenders = list(offenders)
-    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
+    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders,
+     'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
 
 
 # 2.3 Ensure the S3 bucket used to store CloudTrail logs is not publicly accessible (Scored)
@@ -941,7 +970,8 @@ def control_2_3_ensure_cloudtrail_bucket_not_public(resource):
                 result = False
                 offenders.append(str(o['TrailARN']) + "NoS3Logging")
                 fail_reason = "Cloudtrail not configured to log to S3. " + fail_reason
-    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
+    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders,
+     'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
 
 
 # 2.4 Ensure CloudTrail trails are integrated with CloudWatch Logs (Scored)
@@ -975,7 +1005,8 @@ def control_2_4_ensure_cloudtrail_cloudwatch_logs_integration(resource):
                 result = False
                 fail_reason = "CloudTrails without CloudWatch Logs discovered"
                 offenders.append(str(o['TrailARN']))
-    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
+    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders,
+     'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
 
 
 # 2.5 Ensure AWS Config is enabled in all regions (Scored)
@@ -1047,7 +1078,8 @@ def control_2_5_ensure_config_all_regions(resource):
         result = False
         fail_reason = "Config not enabled in all regions, not capturing all/global events or delivery channel errors"
         offenders.append("Global:NotRecording")
-    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
+    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders,
+     'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
 
 
 # 2.6 Ensure S3 bucket access logging is enabled on the CloudTrail S3 bucket (Scored)
@@ -1084,7 +1116,8 @@ def control_2_6_ensure_cloudtrail_bucket_logging(resource):
                 result = False
                 fail_reason = fail_reason + "CloudTrail S3 bucket without logging discovered"
                 offenders.append("Trail:" + str(o['TrailARN']) + " - S3Bucket:" + str(o['S3BucketName']))
-    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
+    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders,
+     'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
 
 
 # 2.7 Ensure CloudTrail logs are encrypted at rest using KMS CMKs (Scored)
@@ -1114,7 +1147,8 @@ def control_2_7_ensure_cloudtrail_encryption_kms(resource):
                 result = False
                 fail_reason = "CloudTrail not using KMS CMK for encryption discovered"
                 offenders.append("Trail:" + str(o['TrailARN']))
-    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
+    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders,
+     'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
 
 
 # 2.8 Ensure rotation for customer created CMKs is enabled (Scored)
@@ -1148,7 +1182,8 @@ def control_2_8_ensure_kms_cmk_rotation(resource):
                             offenders.append("Key:" + str(keyDescription['KeyMetadata']['Arn']))
                 except:
                     pass  # Ignore keys without permission, for example ACM key
-    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
+    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders,
+     'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
 
 
 # moved from 4.3 to 2.9 in v1.2 of CISFB
@@ -1191,7 +1226,8 @@ def control_2_9_ensure_flow_logs_enabled_on_all_vpc(resource):
                 result = False
                 fail_reason = "VPC without active VPC Flow Logs found"
                 offenders.append(str(n) + " : " + str(m['VpcId']))
-    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
+    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders,
+     'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
 
 
 # --- Monitoring ---
@@ -1238,7 +1274,8 @@ def control_3_1_ensure_log_metric_filter_unauthorized_api_calls(resource):
                                 result = True
             except:
                 pass
-    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
+    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders,
+     'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
 
 
 # 3.2 Ensure a log metric filter and alarm exist for Management Console sign-in without MFA (Scored)
@@ -1283,7 +1320,8 @@ def control_3_2_ensure_log_metric_filter_console_signin_no_mfa(resource):
                                 result = True
             except:
                 pass
-    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
+    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders,
+     'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
 
 
 # 3.3 Ensure a log metric filter and alarm exist for usage of "root" account (Scored)
@@ -1329,7 +1367,8 @@ def control_3_3_ensure_log_metric_filter_root_usage(resource):
                                 result = True
             except:
                 pass
-    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
+    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders,
+     'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
 
 
 # 3.4 Ensure a log metric filter and alarm exist for IAM policy changes  (Scored)
@@ -1381,7 +1420,8 @@ def control_3_4_ensure_log_metric_iam_policy_change(resource):
                                 result = True
             except:
                 pass
-    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
+    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders,
+     'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
 
 
 # 3.5 Ensure a log metric filter and alarm exist for CloudTrail configuration changes (Scored)
@@ -1428,7 +1468,8 @@ def control_3_5_ensure_log_metric_cloudtrail_configuration_changes(resource):
                                 result = True
             except:
                 pass
-    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
+    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders,
+    'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
 
 
 # 3.6 Ensure a log metric filter and alarm exist for AWS Management Console authentication failures (Scored)
@@ -1472,7 +1513,8 @@ def control_3_6_ensure_log_metric_console_auth_failures(resource):
                                 result = True
             except:
                 pass
-    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
+    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders,
+    'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
 
 
 # 3.7 Ensure a log metric filter and alarm exist for disabling or scheduled deletion of customer created CMKs (Scored)
@@ -1517,7 +1559,8 @@ def control_3_7_ensure_log_metric_disabling_scheduled_delete_of_kms_cmk(resource
                                 result = True
             except:
                 pass
-    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
+    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders,
+    'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
 
 
 # 3.8 Ensure a log metric filter and alarm exist for S3 bucket policy changes (Scored)
@@ -1566,7 +1609,8 @@ def control_3_8_ensure_log_metric_s3_bucket_policy_changes(resource):
                                 result = True
             except:
                 pass
-    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
+    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders,
+    'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
 
 
 # 3.9 Ensure a log metric filter and alarm exist for AWS Config configuration changes (Scored)
@@ -1613,7 +1657,8 @@ def control_3_9_ensure_log_metric_config_configuration_changes(resource):
                                 result = True
             except:
                 pass
-    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
+    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders,
+    'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
 
 
 # 3.10 Ensure a log metric filter and alarm exist for security group changes (Scored)
@@ -1660,7 +1705,8 @@ def control_3_10_ensure_log_metric_security_group_changes(resource):
                                 result = True
             except:
                 pass
-    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
+    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders,
+    'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
 
 
 # 3.11 Ensure a log metric filter and alarm exist for changes to Network Access Control Lists (NACL) (Scored)
@@ -1708,7 +1754,8 @@ def control_3_11_ensure_log_metric_nacl(resource):
                                 result = True
             except:
                 pass
-    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
+    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders,
+    'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
 
 
 # 3.12 Ensure a log metric filter and alarm exist for changes to network gateways (Scored)
@@ -1755,7 +1802,8 @@ def control_3_12_ensure_log_metric_changes_to_network_gateways(resource):
                                 result = True
             except:
                 pass
-    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
+    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders,
+    'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
 
 
 # 3.13 Ensure a log metric filter and alarm exist for route table changes (Scored)
@@ -1803,7 +1851,8 @@ def control_3_13_ensure_log_metric_changes_to_route_tables(resource):
                                 result = True
             except:
                 pass
-    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
+    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders,
+    'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
 
 
 # 3.14 Ensure a log metric filter and alarm exist for VPC changes (Scored)
@@ -1853,7 +1902,8 @@ def control_3_14_ensure_log_metric_changes_to_vpc(resource):
                                 result = True
             except:
                 pass
-    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
+    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders,
+    'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
 
 
 # --- Networking ---
@@ -1889,7 +1939,8 @@ def control_4_1_ensure_ssh_not_open_to_world(resource):
                             result = False
                             fail_reason = "Found Security Group with port 22 open to the world (0.0.0.0/0)"
                             offenders.append(str(n) + " : " + str(m['GroupId']))
-    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
+    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders,
+    'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
 
 
 # 4.2 Ensure no security groups allow ingress from 0.0.0.0/0 to port 3389 (Scored)
@@ -1923,7 +1974,8 @@ def control_4_2_ensure_rdp_not_open_to_world(resource):
                             result = False
                             fail_reason = "Found Security Group with port 3389 open to the world (0.0.0.0/0)"
                             offenders.append(str(n) + " : " + str(m['GroupId']))
-    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
+    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders,
+    'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
 
 
 # 4.3 Ensure the default security group of every VPC restricts all traffic (Scored)
@@ -1958,7 +2010,8 @@ def control_4_3_ensure_default_security_groups_restricts_traffic(resource):
                 result = False
                 fail_reason = "Default security groups with ingress or egress rules discovered"
                 offenders.append(str(n) + " : " + str(m['GroupId']))
-    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
+    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders,
+    'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
 
 
 # 4.4 Ensure routing tables for VPC peering are "least access" (Not Scored)
@@ -1989,7 +2042,8 @@ def control_4_4_ensure_route_tables_are_least_access(resource):
                             offenders.append(str(n) + " : " + str(m['RouteTableId']))
                 except:
                     pass
-    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
+    return {'Result': result, 'failReason': fail_reason, 'Offenders': offenders,
+    'ScoredControl': scored, 'Description': description, 'ControlId': control} #pylint: disable=broad-except
 
 
 # --- Central functions ---
@@ -2290,14 +2344,14 @@ def print_json(result, annotation):
     if OUTPUT_ONLY_JSON is True:
         logger.info(result)
     else:
-        logger.info("JSON output:")
-        logger.info("-------------------------------------------------------")
-        logger.info(result)
-        logger.info("-------------------------------------------------------")
-        logger.info("\n")
-        logger.info("Summary:")
-        logger.info(annotation)
-        logger.info("\n")
+        print("JSON output:")
+        print("-------------------------------------------------------")
+        print(result)
+        print("-------------------------------------------------------")
+        print("\n")
+        print("Summary:")
+        print(annotation)
+        print("\n")
     return 0
 
 
@@ -2336,6 +2390,13 @@ def send_results_to_sns(url):
         TYPE: Description
     """
     # Get correct region for the TopicARN
+    global SNS_TOPIC_ARN
+    if not SNS_TOPIC_ARN:
+        try:
+            SNS_TOPIC_ARN = os.environ['SNS_TOPIC_ARN']
+        except KeyError as e:
+            logger.error("Bucket not set: {0}".format(e))
+
     region = (SNS_TOPIC_ARN.split("sns:", 1)[1]).split(":", 1)[0]
     client = boto3.client('sns', region_name=region)
     client.publish(
@@ -2361,7 +2422,7 @@ def lambda_handler(event, context):
     # result : Boolean - True/False
     # failReason : String - Failure description
     # scored : Boolean - True/False
-    # Check if the script is initiated from AWS Config Rules
+    # Check if the script is initiade from AWS Config Rules
     try:
         if event['configRuleId']:
             config_rule = True
@@ -2448,7 +2509,7 @@ def lambda_handler(event, context):
 
     # multipreocessing per controls set
     # TODO: rework the logic in order to handle all benchmarks in one pool.map
-    pool = ThreadPool(processes=20)
+    pool = ThreadPool(processes=10)
 
     def worker(func):
         return func(global_resources)

@@ -43,7 +43,8 @@ aws-cis-foundation-benchmark-checklist-lambdarole.json
 
 ## changes
 * updated benchmarks for CIS 1.2
+* added logging
 * added mutiprocessing per benchmark set
 * json report to s3
 * added support for python 3
-* style optimization
+
