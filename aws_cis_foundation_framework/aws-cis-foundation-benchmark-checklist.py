@@ -2361,7 +2361,7 @@ def lambda_handler(event, context):
     # result : Boolean - True/False
     # failReason : String - Failure description
     # scored : Boolean - True/False
-    # Check if the script is initiade from AWS Config Rules
+    # Check if the script is initiated from AWS Config Rules
     try:
         if event['configRuleId']:
             config_rule = True
@@ -2448,7 +2448,7 @@ def lambda_handler(event, context):
 
     # multipreocessing per controls set
     # TODO: rework the logic in order to handle all benchmarks in one pool.map
-    pool = ThreadPool(processes=10)
+    pool = ThreadPool(processes=20)
 
     def worker(func):
         return func(global_resources)
