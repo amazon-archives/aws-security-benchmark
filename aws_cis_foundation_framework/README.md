@@ -1,10 +1,10 @@
 # aws-cis-foundation-benchmark-checklist
 Script to evaluate your AWS account against the full CIS Amazon Web Services
-Foundations Benchmark 1.1  
+Foundations Benchmark ~~1.1~~`1.2` 
 The script have a number of different outputs, all optional by changing the
 settings inside the script.  
 All outputs will generate a single report of all supported controls in short
-format, full JSON or HTML.  
+format, full JSON ~~or~~`and` HTML.  
 Delivery of the report is console output for JSON structure, S3 SignedURL for
 HTML file and optional publish to SNS for the S3 SignedURL if you wish to
 receive an email or trigger other functions any time a new report is done.  
@@ -14,7 +14,8 @@ multiple accounts
 ## Execution
 ### Requirement
 Verified with Python 2.7.
-Python 3.6 support in process.
+
+`verfied with Python 3.6.` ~~support in process.~~
 
 ### Config Rules
 By adding the script to you AWS account as a Lambda function you can tie it
@@ -38,4 +39,11 @@ Specify profile by using the -p or --profile
 
 ## IAM Policy
 The IAM policy required to run the script is located in the file  
-aws-cis-foundation-benchmark-checklist-lambdarole.json  
+aws-cis-foundation-benchmark-checklist-lambdarole.json
+
+## changes
+* updated benchmarks for CIS 1.2
+* added mutiprocessing per benchmark set
+* json report to s3
+* added support for python 3
+* style optimization
