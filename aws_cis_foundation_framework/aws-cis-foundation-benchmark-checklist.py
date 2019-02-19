@@ -37,7 +37,7 @@ S3_WEB_REPORT = True
 
 # Where should the report be delivered to?
 # Make sure to update permissions for the Lambda role if you change bucket name.
-S3_WEB_REPORT_BUCKET = "CHANGE_ME_TO_YOUR_S3_BUCKET"
+S3_REPORT_BUCKET = "CHANGE_ME_TO_YOUR_S3_BUCKET"
 
 # Create separate report files?
 # This will add date and account number as prefix. Example: cis_report_111111111111_161220_1213.html
@@ -2100,7 +2100,7 @@ def s3report(htmlReport, account):
             f.flush()
         try:    
             f.close()
-            S3_CLIENT.upload_file(f.name, S3_WEB_REPORT_BUCKET, reportName)
+            S3_CLIENT.upload_file(f.name, S3_REPORT_BUCKET, reportName)
             os.unlink(f.name)
         except Exception as e:
             return "Failed to upload report to S3 because: " + str(e)
@@ -2108,7 +2108,7 @@ def s3report(htmlReport, account):
     signedURL = S3_CLIENT.generate_presigned_url(
         'get_object',
         Params={
-            'Bucket': S3_WEB_REPORT_BUCKET,
+            'Bucket': S3_REPORT_BUCKET,
             'Key': reportName
         },
         ExpiresIn=ttl)
