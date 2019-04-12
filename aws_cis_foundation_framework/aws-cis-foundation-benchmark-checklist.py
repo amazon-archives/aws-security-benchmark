@@ -813,7 +813,7 @@ def control_1_24_no_overly_permissive_policies():
 
         for n in statements:
             # a policy statement has to contain either an Action or a NotAction
-            if 'Action' in list(n.keys()) and n['Effect'] == 'Allow':
+            if 'Resource' in n.keys() and 'Action' in n.keys() and n['Effect'] == 'Allow':
                 if ("'*'" in str(n['Action']) or str(n['Action']) == "*") and (
                         "'*'" in str(n['Resource']) or str(n['Resource']) == "*"):
                     result = False
