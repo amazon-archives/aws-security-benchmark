@@ -810,10 +810,10 @@ def control_2_1_ensure_cloud_trail_all_regions(cloudtrails):
     scored = True
     for m, n in cloudtrails.items():
         for o in n:
-            if is_active_multiregion_cloudtrail(o):
+            if is_active_multiregion_cloudtrail(o, m):
                 client = boto3.client('cloudtrail', region_name=m)
                 response = client.get_event_selectors(
-                    TrailName=o['TrailName']
+                    TrailName=o['Name']
                 )
                 if response['EventSelectors'][0]['IncludeManagementEvents'] == True and \
                     response['EventSelectors'][0]['ReadWriteType'] == 'All':
@@ -1169,7 +1169,7 @@ def control_3_1_ensure_log_metric_filter_unauthorized_api_calls(cloudtrails):
     for m, n in cloudtrails.items():
         for o in n:
             try:
-                if is_active_multiregion_cloudtrail(o) and o['CloudWatchLogsLogGroupArn']:
+                if is_active_multiregion_cloudtrail(o,m) and o['CloudWatchLogsLogGroupArn']:
                     group = re.search('log-group:(.+?):', o['CloudWatchLogsLogGroupArn']).group(1)
                     client = boto3.client('logs', region_name=m)
                     filters = client.describe_metric_filters(
@@ -1214,7 +1214,7 @@ def control_3_2_ensure_log_metric_filter_console_signin_no_mfa(cloudtrails):
     for m, n in cloudtrails.items():
         for o in n:
             try:
-                if is_active_multiregion_cloudtrail(o) and o['CloudWatchLogsLogGroupArn']:
+                if is_active_multiregion_cloudtrail(o,m) and o['CloudWatchLogsLogGroupArn']:
                     group = re.search('log-group:(.+?):', o['CloudWatchLogsLogGroupArn']).group(1)
                     client = boto3.client('logs', region_name=m)
                     filters = client.describe_metric_filters(
@@ -1259,7 +1259,7 @@ def control_3_3_ensure_log_metric_filter_root_usage(cloudtrails):
     for m, n in cloudtrails.items():
         for o in n:
             try:
-                if is_active_multiregion_cloudtrail(o) and o['CloudWatchLogsLogGroupArn']:
+                if is_active_multiregion_cloudtrail(o,m) and o['CloudWatchLogsLogGroupArn']:
                     group = re.search('log-group:(.+?):', o['CloudWatchLogsLogGroupArn']).group(1)
                     client = boto3.client('logs', region_name=m)
                     filters = client.describe_metric_filters(
@@ -1305,7 +1305,7 @@ def control_3_4_ensure_log_metric_iam_policy_change(cloudtrails):
     for m, n in cloudtrails.items():
         for o in n:
             try:
-                if is_active_multiregion_cloudtrail(o) and o['CloudWatchLogsLogGroupArn']:
+                if is_active_multiregion_cloudtrail(o,m) and o['CloudWatchLogsLogGroupArn']:
                     group = re.search('log-group:(.+?):', o['CloudWatchLogsLogGroupArn']).group(1)
                     client = boto3.client('logs', region_name=m)
                     filters = client.describe_metric_filters(
@@ -1364,7 +1364,7 @@ def control_3_5_ensure_log_metric_cloudtrail_configuration_changes(cloudtrails):
     for m, n in cloudtrails.items():
         for o in n:
             try:
-                if is_active_multiregion_cloudtrail(o) and o['CloudWatchLogsLogGroupArn']:
+                if is_active_multiregion_cloudtrail(o,m) and o['CloudWatchLogsLogGroupArn']:
                     group = re.search('log-group:(.+?):', o['CloudWatchLogsLogGroupArn']).group(1)
                     client = boto3.client('logs', region_name=m)
                     filters = client.describe_metric_filters(
@@ -1412,7 +1412,7 @@ def control_3_6_ensure_log_metric_console_auth_failures(cloudtrails):
     for m, n in cloudtrails.items():
         for o in n:
             try:
-                if is_active_multiregion_cloudtrail(o) and o['CloudWatchLogsLogGroupArn']:
+                if is_active_multiregion_cloudtrail(o,m) and o['CloudWatchLogsLogGroupArn']:
                     group = re.search('log-group:(.+?):', o['CloudWatchLogsLogGroupArn']).group(1)
                     client = boto3.client('logs', region_name=m)
                     filters = client.describe_metric_filters(
@@ -1457,7 +1457,7 @@ def control_3_7_ensure_log_metric_disabling_scheduled_delete_of_kms_cmk(cloudtra
     for m, n in cloudtrails.items():
         for o in n:
             try:
-                if is_active_multiregion_cloudtrail(o) and o['CloudWatchLogsLogGroupArn']:
+                if is_active_multiregion_cloudtrail(o,m) and o['CloudWatchLogsLogGroupArn']:
                     group = re.search('log-group:(.+?):', o['CloudWatchLogsLogGroupArn']).group(1)
                     client = boto3.client('logs', region_name=m)
                     filters = client.describe_metric_filters(
@@ -1503,7 +1503,7 @@ def control_3_8_ensure_log_metric_s3_bucket_policy_changes(cloudtrails):
     for m, n in cloudtrails.items():
         for o in n:
             try:
-                if is_active_multiregion_cloudtrail(o) and o['CloudWatchLogsLogGroupArn']:
+                if is_active_multiregion_cloudtrail(o,m) and o['CloudWatchLogsLogGroupArn']:
                     group = re.search('log-group:(.+?):', o['CloudWatchLogsLogGroupArn']).group(1)
                     client = boto3.client('logs', region_name=m)
                     filters = client.describe_metric_filters(
@@ -1556,7 +1556,7 @@ def control_3_9_ensure_log_metric_config_configuration_changes(cloudtrails):
     for m, n in cloudtrails.items():
         for o in n:
             try:
-                if is_active_multiregion_cloudtrail(o) and o['CloudWatchLogsLogGroupArn']:
+                if is_active_multiregion_cloudtrail(o,m) and o['CloudWatchLogsLogGroupArn']:
                     group = re.search('log-group:(.+?):', o['CloudWatchLogsLogGroupArn']).group(1)
                     client = boto3.client('logs', region_name=m)
                     filters = client.describe_metric_filters(
@@ -1604,7 +1604,7 @@ def control_3_10_ensure_log_metric_security_group_changes(cloudtrails):
     for m, n in cloudtrails.items():
         for o in n:
             try:
-                if is_active_multiregion_cloudtrail(o) and o['CloudWatchLogsLogGroupArn']:
+                if is_active_multiregion_cloudtrail(o,m) and o['CloudWatchLogsLogGroupArn']:
                     group = re.search('log-group:(.+?):', o['CloudWatchLogsLogGroupArn']).group(1)
                     client = boto3.client('logs', region_name=m)
                     filters = client.describe_metric_filters(
@@ -1653,7 +1653,7 @@ def control_3_11_ensure_log_metric_nacl(cloudtrails):
     for m, n in cloudtrails.items():
         for o in n:
             try:
-                if is_active_multiregion_cloudtrail(o) and o['CloudWatchLogsLogGroupArn']:
+                if is_active_multiregion_cloudtrail(o,m) and o['CloudWatchLogsLogGroupArn']:
                     group = re.search('log-group:(.+?):', o['CloudWatchLogsLogGroupArn']).group(1)
                     client = boto3.client('logs', region_name=m)
                     filters = client.describe_metric_filters(
@@ -1702,7 +1702,7 @@ def control_3_12_ensure_log_metric_changes_to_network_gateways(cloudtrails):
     for m, n in cloudtrails.items():
         for o in n:
             try:
-                if is_active_multiregion_cloudtrail(o) and o['CloudWatchLogsLogGroupArn']:
+                if is_active_multiregion_cloudtrail(o,m) and o['CloudWatchLogsLogGroupArn']:
                     group = re.search('log-group:(.+?):', o['CloudWatchLogsLogGroupArn']).group(1)
                     client = boto3.client('logs', region_name=m)
                     filters = client.describe_metric_filters(
@@ -1751,7 +1751,7 @@ def control_3_13_ensure_log_metric_changes_to_route_tables(cloudtrails):
     for m, n in cloudtrails.items():
         for o in n:
             try:
-                if is_active_multiregion_cloudtrail(o) and o['CloudWatchLogsLogGroupArn']:
+                if is_active_multiregion_cloudtrail(o,m) and o['CloudWatchLogsLogGroupArn']:
                     group = re.search('log-group:(.+?):', o['CloudWatchLogsLogGroupArn']).group(1)
                     client = boto3.client('logs', region_name=m)
                     filters = client.describe_metric_filters(
@@ -1801,7 +1801,7 @@ def control_3_14_ensure_log_metric_changes_to_vpc(cloudtrails):
     for m, n in cloudtrails.items():
         for o in n:
             try:
-                if is_active_multiregion_cloudtrail(o) and o['CloudWatchLogsLogGroupArn']:
+                if is_active_multiregion_cloudtrail(o,m) and o['CloudWatchLogsLogGroupArn']:
                     group = re.search('log-group:(.+?):', o['CloudWatchLogsLogGroupArn']).group(1)
                     client = boto3.client('logs', region_name=m)
                     filters = client.describe_metric_filters(
@@ -2103,7 +2103,7 @@ def find_in_string(pattern, target):
     return result
 
 
-def is_active_multiregion_cloudtrail(trail):
+def is_active_multiregion_cloudtrail(trail, region):
     """Summary
 
     Args:
@@ -2112,10 +2112,10 @@ def is_active_multiregion_cloudtrail(trail):
     Returns:
         bool: True if the given trail is multiregion and logging is true
     """
-    if o['IsMultiRegionTrail']:
-        client = boto3.client('cloudtrail', region_name=m)
+    if trail['IsMultiRegionTrail']:
+        client = boto3.client('cloudtrail', region_name=region)
         response = client.get_trail_status(
-            Name=o['TrailARN']
+            Name=trail['TrailARN']
         )
         if response['IsLogging'] is True:
             return True
