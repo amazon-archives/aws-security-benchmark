@@ -30,7 +30,7 @@ import boto3
 # --- Script controls ---
 
 # CIS Benchmark version referenced. Only used in web report.
-AWS_CIS_BENCHMARK_VERSION = "1.1"
+AWS_CIS_BENCHMARK_VERSION = "1.2"
 
 # Would you like a HTML file generated with the result?
 # This file will be delivered using a signed URL.
