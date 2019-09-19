@@ -39,3 +39,14 @@ Specify profile by using the -p or --profile
 ## IAM Policy
 The IAM policy required to run the script is located in the file  
 aws-cis-foundation-benchmark-checklist-lambdarole.json  
+
+## Cloud formation template for aws-cis-foundation-benchmark-checklist.py
+1. Zip aws-cis-foundation-benchmark-checklist.py
+`zip cis_report_lambda.zip aws-cis-foundation-benchmark-checklist.py`
+2. Upload zip in s3 bucket
+3. Upload cloud formation template in AWS
+4. Enter variables values:
+`LambdaBucketName` - bucket where lambda code is stored
+`BucketForReport` - bucket where cis report will be stored
+`EmailAddress` - which should receive cis report
+`SnsTopicName` - name of cis sns topic
