@@ -1,8 +1,7 @@
 ---
 
   #====================================================================================================
-  # AWS CloudFormation template for establishing CIS AWS 1.1 benchmark governance rules
-  # Download the benchmarks here: https://benchmarks.cisecurity.org/en-us/?route=downloads.form.awsfoundations.110
+  # AWS CloudFormation template for establishing CIS AWS 1.2 benchmark governance rules
   #
   # The controls are a combination of AWS Config Rules (both AWS-managed and custom), Amazon CloudWatch rules, and Amazon CloudWatch alarms.
   # Please note that these resources will incur costs in your account; please refer to the pricing model for each service.
@@ -415,7 +414,7 @@
           SourceIdentifier: RESTRICTED_INCOMING_TRAFFIC
 
     #==================================================
-    # CIS 4.3	Ensure VPC flow logging is enabled in all VPCs
+    # CIS 2.9	Ensure VPC flow logging is enabled in all VPCs
     #==================================================
     FunctionForVpcFlowLogRule:
       Type: AWS::Lambda::Function
@@ -491,7 +490,7 @@
         Principal: config.amazonaws.com
 
     #==================================================
-    # CIS 4.4	Ensure the default security group of every VPC restricts all traffic
+    # CIS 4.3	Ensure the default security group of every VPC restricts all traffic
     #==================================================
     FunctionForVpcDefaultSecurityGroupsRule:
       Type: AWS::Lambda::Function
@@ -1206,7 +1205,7 @@
           SourceIdentifier: !GetAtt FunctionForEvaluateCloudTrailLogIntegrityRule.Arn
 
     #==================================================
-    # CIS 1.21	Ensure IAM instance roles are used for AWS resource access from instances
+    # CIS 1.19	Ensure IAM instance roles are used for AWS resource access from instances
     #==================================================
     FunctionForInstanceRoleUseRule:
       Type: AWS::Lambda::Function
@@ -1493,7 +1492,7 @@
           SourceIdentifier: !GetAtt FunctionForEvaluateConfigInAllRegionsRule.Arn
 
     #==================================================
-    # CIS 4.5	Ensure routing tables for VPC peering are "least access"
+    # CIS 4.4	Ensure routing tables for VPC peering are "least access"
     #==================================================
     FunctionForVpcPeeringRouteTablesRule:
       Type: AWS::Lambda::Function
@@ -2144,7 +2143,6 @@
     # CIS 3.12	Ensure a log metric filter and alarm exist for changes to network gateways
     # CIS 3.13	Ensure a log metric filter and alarm exist for route table changes
     # CIS 3.14	Ensure a log metric filter and alarm exist for VPC changes
-    # CIS 3.15	Ensure appropriate subscribers to each SNS topic
     #==================================================
     NetworkChangeCloudWatchEventRule:
       Type: AWS::Events::Rule

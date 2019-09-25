@@ -30,7 +30,7 @@ import boto3
 # --- Script controls ---
 
 # CIS Benchmark version referenced. Only used in web report.
-AWS_CIS_BENCHMARK_VERSION = "1.1"
+AWS_CIS_BENCHMARK_VERSION = "1.2"
 
 # Would you like a HTML file generated with the result?
 # This file will be delivered using a signed URL.
@@ -166,6 +166,19 @@ def control_1_2_mfa_on_password_enabled_iam(credreport):
             'Description': description, 'ControlId': control}
 
 
+# Check if a given timestamp is more than 90 days ago
+def time_gt_90_days(ts):
+    # Get current time
+    now = time.strftime('%Y-%m-%dT%H:%M:%S+00:00', time.gmtime(time.time()))
+    frm = "%Y-%m-%dT%H:%M:%S+00:00"
+
+    delta = datetime.strptime(now, frm) - datetime.strptime(ts, frm)
+    if delta.days > 90:
+        return True
+
+    return False
+
+
 # 1.3 Ensure credentials unused for 90 days or greater are disabled (Scored)
 def control_1_3_unused_credentials(credreport):
     """Summary
@@ -182,17 +195,13 @@ def control_1_3_unused_credentials(credreport):
     control = "1.3"
     description = "Ensure credentials unused for 90 days or greater are disabled"
     scored = True
-    # Get current time
-    now = time.strftime('%Y-%m-%dT%H:%M:%S+00:00', time.gmtime(time.time()))
-    frm = "%Y-%m-%dT%H:%M:%S+00:00"
 
     # Look for unused credentails
     for i in range(len(credreport)):
         if credreport[i]['password_enabled'] == "true":
             try:
-                delta = datetime.strptime(now, frm) - datetime.strptime(credreport[i]['password_last_used'], frm)
                 # Verify password have been used in the last 90 days
-                if delta.days > 90:
+                if time_gt_90_days(credreport[i]['password_last_used']):
                     result = False
                     failReason = "Credentials unused > 90 days detected. "
                     offenders.append(str(credreport[i]['arn']) + ":password")
@@ -200,27 +209,41 @@ def control_1_3_unused_credentials(credreport):
                 pass  # Never used
         if credreport[i]['access_key_1_active'] == "true":
             try:
-                delta = datetime.strptime(now, frm) - datetime.strptime(credreport[i]['access_key_1_last_used_date'],
-                                                                        frm)
-                # Verify password have been used in the last 90 days
-                if delta.days > 90:
+                # Verify access key has been used in the last 90 days
+                if time_gt_90_days(credreport[i]['access_key_1_last_used_date']):
                     result = False
                     failReason = "Credentials unused > 90 days detected. "
                     offenders.append(str(credreport[i]['arn']) + ":key1")
             except:
                 pass
+            if credreport[i]['access_key_1_last_used_date'] == 'N/A':
+                # Verify access key has been rotated in the last 90 days
+                if time_gt_90_days(credreport[i]['access_key_1_last_rotated']):
+                    result = False
+                    failReason = "Credentials unused > 90 days detected. "
+                    offenders.append(str(credreport[i]['arn']) + ":key1")
+
         if credreport[i]['access_key_2_active'] == "true":
             try:
-                delta = datetime.strptime(now, frm) - datetime.strptime(credreport[i]['access_key_2_last_used_date'],
-                                                                        frm)
-                # Verify password have been used in the last 90 days
-                if delta.days > 90:
+                # Verify access key has been rotated in the last 90 days
+                if time_gt_90_days(credreport[i]['access_key_2_last_used_date']):
+                    result = False
+                    failReason = "Credentials unused > 90 days detected. "
+                    offenders.append(str(credreport[i]['arn']) + ":key2")
+                # Verify access key has been rotated in the last 90 days
+                if time_gt_90_days(credreport[i]['access_key_2_last_rotated']):
                     result = False
                     failReason = "Credentials unused > 90 days detected. "
                     offenders.append(str(credreport[i]['arn']) + ":key2")
             except:
-                # Never used
                 pass
+            if credreport[i]['access_key_2_last_used_date'] == 'N/A':
+                # Verify access key has been rotated in the last 90 days
+                if time_gt_90_days(credreport[i]['access_key_2_last_rotated']):
+                    result = False
+                    failReason = "Credentials unused > 90 days detected. "
+                    offenders.append(str(credreport[i]['arn']) + ":key2")
+
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
             'Description': description, 'ControlId': control}
 
@@ -249,42 +272,20 @@ def control_1_4_rotated_keys(credreport):
     for i in range(len(credreport)):
         if credreport[i]['access_key_1_active'] == "true":
             try:
-                delta = datetime.strptime(now, frm) - datetime.strptime(credreport[i]['access_key_1_last_rotated'], frm)
                 # Verify keys have rotated in the last 90 days
-                if delta.days > 90:
+                if time_gt_90_days(credreport[i]['access_key_1_last_rotated']):
                     result = False
                     failReason = "Key rotation >90 days or not used since rotation"
                     offenders.append(str(credreport[i]['arn']) + ":unrotated key1")
             except:
                 pass
-            try:
-                last_used_datetime = datetime.strptime(credreport[i]['access_key_1_last_used_date'], frm)
-                last_rotated_datetime = datetime.strptime(credreport[i]['access_key_1_last_rotated'], frm)
-                # Verify keys have been used since rotation.
-                if last_used_datetime < last_rotated_datetime:
-                    result = False
-                    failReason = "Key rotation >90 days or not used since rotation"
-                    offenders.append(str(credreport[i]['arn']) + ":unused key1")
-            except:
-                pass
         if credreport[i]['access_key_2_active'] == "true":
             try:
-                delta = datetime.strptime(now, frm) - datetime.strptime(credreport[i]['access_key_2_last_rotated'], frm)
                 # Verify keys have rotated in the last 90 days
-                if delta.days > 90:
+                if time_gt_90_days(credreport[i]['access_key_2_last_rotated']):
                     result = False
                     failReason = "Key rotation >90 days or not used since rotation"
                     offenders.append(str(credreport[i]['arn']) + ":unrotated key2")
-            except:
-                pass
-            try:
-                last_used_datetime = datetime.strptime(credreport[i]['access_key_2_last_used_date'], frm)
-                last_rotated_datetime = datetime.strptime(credreport[i]['access_key_2_last_rotated'], frm)
-                # Verify keys have been used since rotation.
-                if last_used_datetime < last_rotated_datetime:
-                    result = False
-                    failReason = "Key rotation >90 days or not used since rotation"
-                    offenders.append(str(credreport[i]['arn']) + ":unused key2")
             except:
                 pass
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
@@ -619,8 +620,8 @@ def control_1_16_no_policies_on_iam_users():
             'Description': description, 'ControlId': control}
 
 
-# 1.17 Enable detailed billing (Scored)
-def control_1_17_detailed_billing_enabled():
+# 1.17 Maintain current contact details (Not Scored)
+def control_1_17_maintain_current_contact_details():
     """Summary
 
     Returns:
@@ -630,68 +631,33 @@ def control_1_17_detailed_billing_enabled():
     failReason = ""
     offenders = []
     control = "1.17"
-    description = "Enable detailed billing, please verify manually"
-    scored = True
+    description = "Maintain current contact details, please verify manually"
+    scored = False
     failReason = "Control not implemented using API, please verify manually"
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
             'Description': description, 'ControlId': control}
 
 
-# 1.18 Ensure IAM Master and IAM Manager roles are active (Scored)
-def control_1_18_ensure_iam_master_and_manager_roles():
+# 1.18 Ensure security contact information is registered (Not Scored)
+def control_1_18_ensure_security_contact_details():
     """Summary
 
     Returns:
         TYPE: Description
     """
-    result = "True"
-    failReason = "No IAM Master or IAM Manager role created"
+    result = "Manual"
+    failReason = ""
     offenders = []
     control = "1.18"
-    description = "Ensure IAM Master and IAM Manager roles are active. Control under review/investigation"
-    scored = True
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
-            'Description': description, 'ControlId': control}
-
-
-# 1.19 Maintain current contact details (Scored)
-def control_1_19_maintain_current_contact_details():
-    """Summary
-
-    Returns:
-        TYPE: Description
-    """
-    result = "Manual"
-    failReason = ""
-    offenders = []
-    control = "1.19"
-    description = "Maintain current contact details, please verify manually"
-    scored = True
-    failReason = "Control not implemented using API, please verify manually"
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
-            'Description': description, 'ControlId': control}
-
-
-# 1.20 Ensure security contact information is registered (Scored)
-def control_1_20_ensure_security_contact_details():
-    """Summary
-
-    Returns:
-        TYPE: Description
-    """
-    result = "Manual"
-    failReason = ""
-    offenders = []
-    control = "1.20"
     description = "Ensure security contact information is registered, please verify manually"
-    scored = True
+    scored = False
     failReason = "Control not implemented using API, please verify manually"
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
             'Description': description, 'ControlId': control}
 
 
-# 1.21 Ensure IAM instance roles are used for AWS resource access from instances (Scored)
-def control_1_21_ensure_iam_instance_roles_used():
+# 1.19 Ensure IAM instance roles are used for AWS resource access from instances (Not Scored)
+def control_1_19_ensure_iam_instance_roles_used():
     """Summary
 
     Returns:
@@ -700,9 +666,9 @@ def control_1_21_ensure_iam_instance_roles_used():
     result = True
     failReason = ""
     offenders = []
-    control = "1.21"
+    control = "1.19"
     description = "Ensure IAM instance roles are used for AWS resource access from instances, application code is not audited"
-    scored = True
+    scored = False
     failReason = "Instance not assigned IAM role for EC2"
     client = boto3.client('ec2')
     response = client.describe_instances()
@@ -712,14 +678,18 @@ def control_1_21_ensure_iam_instance_roles_used():
             if response['Reservations'][n]['Instances'][0]['IamInstanceProfile']:
                 pass
         except:
+            result = False
+            offenders.append(str(response['Reservations'][n]['Instances'][0]['InstanceId']))
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
             if response['Reservations'][n]['Instances'][0]['State']['Name'] != 'terminated':
                 result = False
                 offenders.append(str(response['Reservations'][n]['Instances'][0]['InstanceId']))
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
 
 
-# 1.22 Ensure a support role has been created to manage incidents with AWS Support (Scored)
-def control_1_22_ensure_incident_management_roles():
+# 1.20 Ensure a support role has been created to manage incidents with AWS Support (Scored)
+def control_1_20_ensure_incident_management_roles():
     """Summary
 
     Returns:
@@ -728,7 +698,7 @@ def control_1_22_ensure_incident_management_roles():
     result = True
     failReason = ""
     offenders = []
-    control = "1.22"
+    control = "1.20"
     description = "Ensure a support role has been created to manage incidents with AWS Support"
     scored = True
     offenders = []
@@ -746,8 +716,8 @@ def control_1_22_ensure_incident_management_roles():
             'Description': description, 'ControlId': control}
 
 
-# 1.23 Do not setup access keys during initial user setup for all IAM users that have a console password (Not Scored)
-def control_1_23_no_active_initial_access_keys_with_iam_user(credreport):
+# 1.21 Do not setup access keys during initial user setup for all IAM users that have a console password (Not Scored)
+def control_1_21_no_active_initial_access_keys_with_iam_user(credreport):
     """Summary
 
     Returns:
@@ -756,7 +726,7 @@ def control_1_23_no_active_initial_access_keys_with_iam_user(credreport):
     result = True
     failReason = ""
     offenders = []
-    control = "1.23"
+    control = "1.21"
     description = "Do not setup access keys during initial user setup for all IAM users that have a console password"
     scored = False
     offenders = []
@@ -774,8 +744,8 @@ def control_1_23_no_active_initial_access_keys_with_iam_user(credreport):
             'Description': description, 'ControlId': control}
 
 
-# 1.24  Ensure IAM policies that allow full "*:*" administrative privileges are not created (Scored)
-def control_1_24_no_overly_permissive_policies():
+# 1.22  Ensure IAM policies that allow full "*:*" administrative privileges are not created (Scored)
+def control_1_22_no_overly_permissive_policies():
     """Summary
 
     Returns:
@@ -784,7 +754,7 @@ def control_1_24_no_overly_permissive_policies():
     result = True
     failReason = ""
     offenders = []
-    control = "1.24"
+    control = "1.22"
     description = "Ensure IAM policies that allow full administrative privileges are not created"
     scored = True
     offenders = []
@@ -825,6 +795,7 @@ def control_1_24_no_overly_permissive_policies():
 
 # --- 2 Logging ---
 
+
 # 2.1 Ensure CloudTrail is enabled in all regions (Scored)
 def control_2_1_ensure_cloud_trail_all_regions(cloudtrails):
     """Summary
@@ -843,12 +814,13 @@ def control_2_1_ensure_cloud_trail_all_regions(cloudtrails):
     scored = True
     for m, n in cloudtrails.items():
         for o in n:
-            if o['IsMultiRegionTrail']:
+            if is_active_multiregion_cloudtrail(o, m):
                 client = boto3.client('cloudtrail', region_name=m)
-                response = client.get_trail_status(
-                    Name=o['TrailARN']
+                response = client.get_event_selectors(
+                    TrailName=o['Name']
                 )
-                if response['IsLogging'] is True:
+                if response['EventSelectors'][0]['IncludeManagementEvents'] == True and \
+                    response['EventSelectors'][0]['ReadWriteType'] == 'All':
                     result = True
                     break
     if result is False:
@@ -885,7 +857,7 @@ def control_2_2_ensure_cloudtrail_validation(cloudtrails):
             'Description': description, 'ControlId': control}
 
 
-# 2.3 Ensure the S3 bucket CloudTrail logs to is not publicly accessible (Scored)
+# 2.3 Ensure the S3 bucket used to store CloudTrail logs is not publicly accessible (Scored)
 def control_2_3_ensure_cloudtrail_bucket_not_public(cloudtrails):
     """Summary
 
@@ -899,7 +871,7 @@ def control_2_3_ensure_cloudtrail_bucket_not_public(cloudtrails):
     failReason = ""
     offenders = []
     control = "2.3"
-    description = "Ensure the S3 bucket CloudTrail logs to is not publicly accessible"
+    description = "Ensure the S3 bucket used to store CloudTrail logs is not publicly accessible"
     scored = True
     for m, n in cloudtrails.items():
         for o in n:
@@ -1141,6 +1113,47 @@ def control_2_8_ensure_kms_cmk_rotation(regions):
             'Description': description, 'ControlId': control}
 
 
+# 2.9 Ensure VPC flow logging is enabled in all VPCs (Scored)
+def control_2_9_ensure_flow_logs_enabled_on_all_vpc(regions):
+    """Summary
+
+    Returns:
+        TYPE: Description
+    """
+    result = True
+    failReason = ""
+    offenders = []
+    control = "2.9"
+    description = "Ensure VPC flow logging is enabled in all VPCs"
+    scored = True
+    for n in regions:
+        client = boto3.client('ec2', region_name=n)
+        flowlogs = client.describe_flow_logs(
+            #  No paginator support in boto atm.
+        )
+        activeLogs = []
+        for m in flowlogs['FlowLogs']:
+            if "vpc-" in str(m['ResourceId']):
+                activeLogs.append(m['ResourceId'])
+        vpcs = client.describe_vpcs(
+            Filters=[
+                {
+                    'Name': 'state',
+                    'Values': [
+                        'available',
+                    ]
+                },
+            ]
+        )
+        for m in vpcs['Vpcs']:
+            if not str(m['VpcId']) in str(activeLogs):
+                result = False
+                failReason = "VPC without active VPC Flow Logs found"
+                offenders.append(str(n) + " : " + str(m['VpcId']))
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
+            'Description': description, 'ControlId': control}
+
+
 # --- Monitoring ---
 
 # 3.1 Ensure a log metric filter and alarm exist for unauthorized API calls (Scored)
@@ -1160,7 +1173,7 @@ def control_3_1_ensure_log_metric_filter_unauthorized_api_calls(cloudtrails):
     for m, n in cloudtrails.items():
         for o in n:
             try:
-                if o['CloudWatchLogsLogGroupArn']:
+                if is_active_multiregion_cloudtrail(o,m) and o['CloudWatchLogsLogGroupArn']:
                     group = re.search('log-group:(.+?):', o['CloudWatchLogsLogGroupArn']).group(1)
                     client = boto3.client('logs', region_name=m)
                     filters = client.describe_metric_filters(
@@ -1205,7 +1218,7 @@ def control_3_2_ensure_log_metric_filter_console_signin_no_mfa(cloudtrails):
     for m, n in cloudtrails.items():
         for o in n:
             try:
-                if o['CloudWatchLogsLogGroupArn']:
+                if is_active_multiregion_cloudtrail(o,m) and o['CloudWatchLogsLogGroupArn']:
                     group = re.search('log-group:(.+?):', o['CloudWatchLogsLogGroupArn']).group(1)
                     client = boto3.client('logs', region_name=m)
                     filters = client.describe_metric_filters(
@@ -1250,7 +1263,7 @@ def control_3_3_ensure_log_metric_filter_root_usage(cloudtrails):
     for m, n in cloudtrails.items():
         for o in n:
             try:
-                if o['CloudWatchLogsLogGroupArn']:
+                if is_active_multiregion_cloudtrail(o,m) and o['CloudWatchLogsLogGroupArn']:
                     group = re.search('log-group:(.+?):', o['CloudWatchLogsLogGroupArn']).group(1)
                     client = boto3.client('logs', region_name=m)
                     filters = client.describe_metric_filters(
@@ -1296,7 +1309,7 @@ def control_3_4_ensure_log_metric_iam_policy_change(cloudtrails):
     for m, n in cloudtrails.items():
         for o in n:
             try:
-                if o['CloudWatchLogsLogGroupArn']:
+                if is_active_multiregion_cloudtrail(o,m) and o['CloudWatchLogsLogGroupArn']:
                     group = re.search('log-group:(.+?):', o['CloudWatchLogsLogGroupArn']).group(1)
                     client = boto3.client('logs', region_name=m)
                     filters = client.describe_metric_filters(
@@ -1355,7 +1368,7 @@ def control_3_5_ensure_log_metric_cloudtrail_configuration_changes(cloudtrails):
     for m, n in cloudtrails.items():
         for o in n:
             try:
-                if o['CloudWatchLogsLogGroupArn']:
+                if is_active_multiregion_cloudtrail(o,m) and o['CloudWatchLogsLogGroupArn']:
                     group = re.search('log-group:(.+?):', o['CloudWatchLogsLogGroupArn']).group(1)
                     client = boto3.client('logs', region_name=m)
                     filters = client.describe_metric_filters(
@@ -1403,7 +1416,7 @@ def control_3_6_ensure_log_metric_console_auth_failures(cloudtrails):
     for m, n in cloudtrails.items():
         for o in n:
             try:
-                if o['CloudWatchLogsLogGroupArn']:
+                if is_active_multiregion_cloudtrail(o,m) and o['CloudWatchLogsLogGroupArn']:
                     group = re.search('log-group:(.+?):', o['CloudWatchLogsLogGroupArn']).group(1)
                     client = boto3.client('logs', region_name=m)
                     filters = client.describe_metric_filters(
@@ -1448,7 +1461,7 @@ def control_3_7_ensure_log_metric_disabling_scheduled_delete_of_kms_cmk(cloudtra
     for m, n in cloudtrails.items():
         for o in n:
             try:
-                if o['CloudWatchLogsLogGroupArn']:
+                if is_active_multiregion_cloudtrail(o,m) and o['CloudWatchLogsLogGroupArn']:
                     group = re.search('log-group:(.+?):', o['CloudWatchLogsLogGroupArn']).group(1)
                     client = boto3.client('logs', region_name=m)
                     filters = client.describe_metric_filters(
@@ -1494,7 +1507,7 @@ def control_3_8_ensure_log_metric_s3_bucket_policy_changes(cloudtrails):
     for m, n in cloudtrails.items():
         for o in n:
             try:
-                if o['CloudWatchLogsLogGroupArn']:
+                if is_active_multiregion_cloudtrail(o,m) and o['CloudWatchLogsLogGroupArn']:
                     group = re.search('log-group:(.+?):', o['CloudWatchLogsLogGroupArn']).group(1)
                     client = boto3.client('logs', region_name=m)
                     filters = client.describe_metric_filters(
@@ -1547,7 +1560,7 @@ def control_3_9_ensure_log_metric_config_configuration_changes(cloudtrails):
     for m, n in cloudtrails.items():
         for o in n:
             try:
-                if o['CloudWatchLogsLogGroupArn']:
+                if is_active_multiregion_cloudtrail(o,m) and o['CloudWatchLogsLogGroupArn']:
                     group = re.search('log-group:(.+?):', o['CloudWatchLogsLogGroupArn']).group(1)
                     client = boto3.client('logs', region_name=m)
                     filters = client.describe_metric_filters(
@@ -1595,7 +1608,7 @@ def control_3_10_ensure_log_metric_security_group_changes(cloudtrails):
     for m, n in cloudtrails.items():
         for o in n:
             try:
-                if o['CloudWatchLogsLogGroupArn']:
+                if is_active_multiregion_cloudtrail(o,m) and o['CloudWatchLogsLogGroupArn']:
                     group = re.search('log-group:(.+?):', o['CloudWatchLogsLogGroupArn']).group(1)
                     client = boto3.client('logs', region_name=m)
                     filters = client.describe_metric_filters(
@@ -1644,7 +1657,7 @@ def control_3_11_ensure_log_metric_nacl(cloudtrails):
     for m, n in cloudtrails.items():
         for o in n:
             try:
-                if o['CloudWatchLogsLogGroupArn']:
+                if is_active_multiregion_cloudtrail(o,m) and o['CloudWatchLogsLogGroupArn']:
                     group = re.search('log-group:(.+?):', o['CloudWatchLogsLogGroupArn']).group(1)
                     client = boto3.client('logs', region_name=m)
                     filters = client.describe_metric_filters(
@@ -1693,7 +1706,7 @@ def control_3_12_ensure_log_metric_changes_to_network_gateways(cloudtrails):
     for m, n in cloudtrails.items():
         for o in n:
             try:
-                if o['CloudWatchLogsLogGroupArn']:
+                if is_active_multiregion_cloudtrail(o,m) and o['CloudWatchLogsLogGroupArn']:
                     group = re.search('log-group:(.+?):', o['CloudWatchLogsLogGroupArn']).group(1)
                     client = boto3.client('logs', region_name=m)
                     filters = client.describe_metric_filters(
@@ -1742,7 +1755,7 @@ def control_3_13_ensure_log_metric_changes_to_route_tables(cloudtrails):
     for m, n in cloudtrails.items():
         for o in n:
             try:
-                if o['CloudWatchLogsLogGroupArn']:
+                if is_active_multiregion_cloudtrail(o,m) and o['CloudWatchLogsLogGroupArn']:
                     group = re.search('log-group:(.+?):', o['CloudWatchLogsLogGroupArn']).group(1)
                     client = boto3.client('logs', region_name=m)
                     filters = client.describe_metric_filters(
@@ -1792,7 +1805,7 @@ def control_3_14_ensure_log_metric_changes_to_vpc(cloudtrails):
     for m, n in cloudtrails.items():
         for o in n:
             try:
-                if o['CloudWatchLogsLogGroupArn']:
+                if is_active_multiregion_cloudtrail(o,m) and o['CloudWatchLogsLogGroupArn']:
                     group = re.search('log-group:(.+?):', o['CloudWatchLogsLogGroupArn']).group(1)
                     client = boto3.client('logs', region_name=m)
                     filters = client.describe_metric_filters(
@@ -1825,24 +1838,6 @@ def control_3_14_ensure_log_metric_changes_to_vpc(cloudtrails):
                                 result = True
             except:
                 pass
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
-            'Description': description, 'ControlId': control}
-
-
-# 3.15 Ensure appropriate subscribers to each SNS topic (Not Scored)
-def control_3_15_verify_sns_subscribers():
-    """Summary
-
-    Returns:
-        TYPE: Description
-    """
-    result = "Manual"
-    failReason = ""
-    offenders = []
-    control = "3.15"
-    description = "Ensure appropriate subscribers to each SNS topic, please verify manually"
-    scored = False
-    failReason = "Control not implemented using API, please verify manually"
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
             'Description': description, 'ControlId': control}
 
@@ -1915,8 +1910,8 @@ def control_4_2_ensure_rdp_not_open_to_world(regions):
             'Description': description, 'ControlId': control}
 
 
-# 4.3 Ensure VPC flow logging is enabled in all VPCs (Scored)
-def control_4_3_ensure_flow_logs_enabled_on_all_vpc(regions):
+# 4.3 Ensure the default security group of every VPC restricts all traffic (Scored)
+def control_4_3_ensure_default_security_groups_restricts_traffic(regions):
     """Summary
 
     Returns:
@@ -1926,47 +1921,6 @@ def control_4_3_ensure_flow_logs_enabled_on_all_vpc(regions):
     failReason = ""
     offenders = []
     control = "4.3"
-    description = "Ensure VPC flow logging is enabled in all VPCs"
-    scored = True
-    for n in regions:
-        client = boto3.client('ec2', region_name=n)
-        flowlogs = client.describe_flow_logs(
-            #  No paginator support in boto atm.
-        )
-        activeLogs = []
-        for m in flowlogs['FlowLogs']:
-            if "vpc-" in str(m['ResourceId']):
-                activeLogs.append(m['ResourceId'])
-        vpcs = client.describe_vpcs(
-            Filters=[
-                {
-                    'Name': 'state',
-                    'Values': [
-                        'available',
-                    ]
-                },
-            ]
-        )
-        for m in vpcs['Vpcs']:
-            if not str(m['VpcId']) in str(activeLogs):
-                result = False
-                failReason = "VPC without active VPC Flow Logs found"
-                offenders.append(str(n) + " : " + str(m['VpcId']))
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
-            'Description': description, 'ControlId': control}
-
-
-# 4.4 Ensure the default security group of every VPC restricts all traffic (Scored)
-def control_4_4_ensure_default_security_groups_restricts_traffic(regions):
-    """Summary
-
-    Returns:
-        TYPE: Description
-    """
-    result = True
-    failReason = ""
-    offenders = []
-    control = "4.4"
     description = "Ensure the default security group of every VPC restricts all traffic"
     scored = True
     for n in regions:
@@ -1990,8 +1944,8 @@ def control_4_4_ensure_default_security_groups_restricts_traffic(regions):
             'Description': description, 'ControlId': control}
 
 
-# 4.5 Ensure routing tables for VPC peering are "least access" (Not Scored)
-def control_4_5_ensure_route_tables_are_least_access(regions):
+# 4.4 Ensure routing tables for VPC peering are "least access" (Not Scored)
+def control_4_4_ensure_route_tables_are_least_access(regions):
     """Summary
 
     Returns:
@@ -2000,7 +1954,7 @@ def control_4_5_ensure_route_tables_are_least_access(regions):
     result = True
     failReason = ""
     offenders = []
-    control = "4.5"
+    control = "4.4"
     description = "Ensure routing tables for VPC peering are least access"
     scored = False
     for n in regions:
@@ -2151,6 +2105,25 @@ def find_in_string(pattern, target):
             result = False
             break
     return result
+
+
+def is_active_multiregion_cloudtrail(trail, region):
+    """Summary
+
+    Args:
+        trail (dict): a trail from a call to describe_trails()
+
+    Returns:
+        bool: True if the given trail is multiregion and logging is true
+    """
+    if trail['IsMultiRegionTrail']:
+        client = boto3.client('cloudtrail', region_name=region)
+        response = client.get_trail_status(
+            Name=trail['TrailARN']
+        )
+        if response['IsLogging'] is True:
+            return True
+    return False
 
 
 def get_account_number():
@@ -2415,14 +2388,12 @@ def lambda_handler(event, context):
     control1.append(control_1_14_root_hardware_mfa_enabled())
     control1.append(control_1_15_security_questions_registered())
     control1.append(control_1_16_no_policies_on_iam_users())
-    control1.append(control_1_17_detailed_billing_enabled())
-    control1.append(control_1_18_ensure_iam_master_and_manager_roles())
-    control1.append(control_1_19_maintain_current_contact_details())
-    control1.append(control_1_20_ensure_security_contact_details())
-    control1.append(control_1_21_ensure_iam_instance_roles_used())
-    control1.append(control_1_22_ensure_incident_management_roles())
-    control1.append(control_1_23_no_active_initial_access_keys_with_iam_user(cred_report))
-    control1.append(control_1_24_no_overly_permissive_policies())
+    control1.append(control_1_17_maintain_current_contact_details())
+    control1.append(control_1_18_ensure_security_contact_details())
+    control1.append(control_1_19_ensure_iam_instance_roles_used())
+    control1.append(control_1_20_ensure_incident_management_roles())
+    control1.append(control_1_21_no_active_initial_access_keys_with_iam_user(cred_report))
+    control1.append(control_1_22_no_overly_permissive_policies())
 
     control2 = []
     control2.append(control_2_1_ensure_cloud_trail_all_regions(cloud_trails))
@@ -2433,6 +2404,7 @@ def lambda_handler(event, context):
     control2.append(control_2_6_ensure_cloudtrail_bucket_logging(cloud_trails))
     control2.append(control_2_7_ensure_cloudtrail_encryption_kms(cloud_trails))
     control2.append(control_2_8_ensure_kms_cmk_rotation(region_list))
+    control2.append(control_2_9_ensure_flow_logs_enabled_on_all_vpc(region_list))
 
     control3 = []
     control3.append(control_3_1_ensure_log_metric_filter_unauthorized_api_calls(cloud_trails))
@@ -2449,14 +2421,12 @@ def lambda_handler(event, context):
     control3.append(control_3_12_ensure_log_metric_changes_to_network_gateways(cloud_trails))
     control3.append(control_3_13_ensure_log_metric_changes_to_route_tables(cloud_trails))
     control3.append(control_3_14_ensure_log_metric_changes_to_vpc(cloud_trails))
-    control3.append(control_3_15_verify_sns_subscribers())
 
     control4 = []
     control4.append(control_4_1_ensure_ssh_not_open_to_world(region_list))
     control4.append(control_4_2_ensure_rdp_not_open_to_world(region_list))
-    control4.append(control_4_3_ensure_flow_logs_enabled_on_all_vpc(region_list))
-    control4.append(control_4_4_ensure_default_security_groups_restricts_traffic(region_list))
-    control4.append(control_4_5_ensure_route_tables_are_least_access(region_list))
+    control4.append(control_4_3_ensure_default_security_groups_restricts_traffic(region_list))
+    control4.append(control_4_4_ensure_route_tables_are_least_access(region_list))
 
     # Join results
     controls = []
