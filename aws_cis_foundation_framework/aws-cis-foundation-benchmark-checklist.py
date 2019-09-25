@@ -712,10 +712,10 @@ def control_1_21_ensure_iam_instance_roles_used():
             if response['Reservations'][n]['Instances'][0]['IamInstanceProfile']:
                 pass
         except:
-            result = False
-            offenders.append(str(response['Reservations'][n]['Instances'][0]['InstanceId']))
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
-            'Description': description, 'ControlId': control}
+            if response['Reservations'][n]['Instances'][0]['State']['Name'] != 'terminated':
+                result = False
+                offenders.append(str(response['Reservations'][n]['Instances'][0]['InstanceId']))
+    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
 
 
 # 1.22 Ensure a support role has been created to manage incidents with AWS Support (Scored)
