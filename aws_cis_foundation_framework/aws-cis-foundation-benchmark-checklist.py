@@ -679,9 +679,6 @@ def control_1_19_ensure_iam_instance_roles_used():
                 pass
         except:
             result = False
-            offenders.append(str(response['Reservations'][n]['Instances'][0]['InstanceId']))
-    return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored,
-            'Description': description, 'ControlId': control}
             if response['Reservations'][n]['Instances'][0]['State']['Name'] != 'terminated':
                 result = False
                 offenders.append(str(response['Reservations'][n]['Instances'][0]['InstanceId']))
