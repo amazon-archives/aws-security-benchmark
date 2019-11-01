@@ -9,6 +9,9 @@ Attributes:
     S3_WEB_REPORT (bool): Description
     S3_WEB_REPORT_BUCKET (str): Description
     S3_WEB_REPORT_EXPIRE (str): Description
+    S3_JSON_REPORT (bool): Description
+    S3_JSON_REPORT_BUCKET (str): Description
+    S3_JSON_REPORT_EXPIRE (str): Description
     S3_WEB_REPORT_OBFUSCATE_ACCOUNT (bool): Description
     SCRIPT_OUTPUT_JSON (bool): Description
 """
@@ -48,7 +51,7 @@ S3_WEB_REPORT_EXPIRE = "168"
 
 # Set to true if you wish to anonymize the account number in the report.
 # This is mostly used for demo/sharing purposes.
-S3_WEB_REPORT_OBFUSCATE_ACCOUNT = False
+S3_WEB_REPORT_OBFUSCATE_ACCOUNT = False 
 
 # Would  you like to send the report signedURL to an SNS topic
 SEND_REPORT_URL_TO_SNS = False
@@ -56,6 +59,16 @@ SNS_TOPIC_ARN = "CHANGE_ME_TO_YOUR_TOPIC_ARN"
 
 # Would you like to print the results as JSON to output?
 SCRIPT_OUTPUT_JSON = True
+
+# output json reports?
+S3_JSON_REPORT = False
+
+# bucket to send json reports to
+S3_JSON_REPORT_BUCKET = "CHANGE_ME_TO_YOUR_S3_BUCKET"
+
+# How many hours should the report be available? Default = 168h/7days
+S3_JSON_REPORT_EXPIRE = "168"
+
 
 # Would you like to supress all output except JSON result?
 # Can be used when you want to pipe result to another system.
@@ -815,7 +828,7 @@ def control_2_1_ensure_cloud_trail_all_regions(cloudtrails):
     control = "2.1"
     description = "Ensure CloudTrail is enabled in all regions"
     scored = True
-    for m, n in cloudtrails.iteritems():
+    for m, n in cloudtrails.items():
         for o in n:
             if o['IsMultiRegionTrail']:
                 client = boto3.client('cloudtrail', region_name=m)
@@ -846,7 +859,7 @@ def control_2_2_ensure_cloudtrail_validation(cloudtrails):
     control = "2.2"
     description = "Ensure CloudTrail log file validation is enabled"
     scored = True
-    for m, n in cloudtrails.iteritems():
+    for m, n in cloudtrails.items():
         for o in n:
             if o['LogFileValidationEnabled'] is False:
                 result = False
@@ -873,7 +886,7 @@ def control_2_3_ensure_cloudtrail_bucket_not_public(cloudtrails):
     control = "2.3"
     description = "Ensure the S3 bucket CloudTrail logs to is not publicly accessible"
     scored = True
-    for m, n in cloudtrails.iteritems():
+    for m, n in cloudtrails.items():
         for o in n:
             #  We only want to check cases where there is a bucket
             if "S3BucketName" in str(o):
@@ -923,7 +936,7 @@ def control_2_4_ensure_cloudtrail_cloudwatch_logs_integration(cloudtrails):
     control = "2.4"
     description = "Ensure CloudTrail trails are integrated with CloudWatch Logs"
     scored = True
-    for m, n in cloudtrails.iteritems():
+    for m, n in cloudtrails.items():
         for o in n:
             try:
                 if "arn:aws:logs" in o['CloudWatchLogsLogGroupArn']:
@@ -1025,7 +1038,7 @@ def control_2_6_ensure_cloudtrail_bucket_logging(cloudtrails):
     control = "2.6"
     description = "Ensure S3 bucket access logging is enabled on the CloudTrail S3 bucket"
     scored = True
-    for m, n in cloudtrails.iteritems():
+    for m, n in cloudtrails.items():
         for o in n:
             # it is possible to have a cloudtrail configured with a nonexistant bucket
             try:
@@ -1060,7 +1073,7 @@ def control_2_7_ensure_cloudtrail_encryption_kms(cloudtrails):
     control = "2.7"
     description = "Ensure CloudTrail logs are encrypted at rest using KMS CMKs"
     scored = True
-    for m, n in cloudtrails.iteritems():
+    for m, n in cloudtrails.items():
         for o in n:
             try:
                 if o['KmsKeyId']:
@@ -1120,7 +1133,7 @@ def control_3_1_ensure_log_metric_filter_unauthorized_api_calls(cloudtrails):
     description = "Ensure log metric filter unauthorized api calls"
     scored = True
     failReason = "Incorrect log metric alerts for unauthorized_api_calls"
-    for m, n in cloudtrails.iteritems():
+    for m, n in cloudtrails.items():
         for o in n:
             try:
                 if o['CloudWatchLogsLogGroupArn']:
@@ -1163,7 +1176,7 @@ def control_3_2_ensure_log_metric_filter_console_signin_no_mfa(cloudtrails):
     description = "Ensure a log metric filter and alarm exist for Management Console sign-in without MFA"
     scored = True
     failReason = "Incorrect log metric alerts for management console signin without MFA"
-    for m, n in cloudtrails.iteritems():
+    for m, n in cloudtrails.items():
         for o in n:
             try:
                 if o['CloudWatchLogsLogGroupArn']:
@@ -1206,7 +1219,7 @@ def control_3_3_ensure_log_metric_filter_root_usage(cloudtrails):
     description = "Ensure a log metric filter and alarm exist for root usage"
     scored = True
     failReason = "Incorrect log metric alerts for root usage"
-    for m, n in cloudtrails.iteritems():
+    for m, n in cloudtrails.items():
         for o in n:
             try:
                 if o['CloudWatchLogsLogGroupArn']:
@@ -1249,7 +1262,7 @@ def control_3_4_ensure_log_metric_iam_policy_change(cloudtrails):
     description = "Ensure a log metric filter and alarm exist for IAM changes"
     scored = True
     failReason = "Incorrect log metric alerts for IAM policy changes"
-    for m, n in cloudtrails.iteritems():
+    for m, n in cloudtrails.items():
         for o in n:
             try:
                 if o['CloudWatchLogsLogGroupArn']:
@@ -1292,7 +1305,7 @@ def control_3_5_ensure_log_metric_cloudtrail_configuration_changes(cloudtrails):
     description = "Ensure a log metric filter and alarm exist for CloudTrail configuration changes"
     scored = True
     failReason = "Incorrect log metric alerts for CloudTrail configuration changes"
-    for m, n in cloudtrails.iteritems():
+    for m, n in cloudtrails.items():
         for o in n:
             try:
                 if o['CloudWatchLogsLogGroupArn']:
@@ -1335,7 +1348,7 @@ def control_3_6_ensure_log_metric_console_auth_failures(cloudtrails):
     description = "Ensure a log metric filter and alarm exist for console auth failures"
     scored = True
     failReason = "Ensure a log metric filter and alarm exist for console auth failures"
-    for m, n in cloudtrails.iteritems():
+    for m, n in cloudtrails.items():
         for o in n:
             try:
                 if o['CloudWatchLogsLogGroupArn']:
@@ -1378,7 +1391,7 @@ def control_3_7_ensure_log_metric_disabling_scheduled_delete_of_kms_cmk(cloudtra
     description = "Ensure a log metric filter and alarm exist for disabling or scheduling deletion of KMS CMK"
     scored = True
     failReason = "Ensure a log metric filter and alarm exist for disabling or scheduling deletion of KMS CMK"
-    for m, n in cloudtrails.iteritems():
+    for m, n in cloudtrails.items():
         for o in n:
             try:
                 if o['CloudWatchLogsLogGroupArn']:
@@ -1421,7 +1434,7 @@ def control_3_8_ensure_log_metric_s3_bucket_policy_changes(cloudtrails):
     description = "Ensure a log metric filter and alarm exist for S3 bucket policy changes"
     scored = True
     failReason = "Ensure a log metric filter and alarm exist for S3 bucket policy changes"
-    for m, n in cloudtrails.iteritems():
+    for m, n in cloudtrails.items():
         for o in n:
             try:
                 if o['CloudWatchLogsLogGroupArn']:
@@ -1464,7 +1477,7 @@ def control_3_9_ensure_log_metric_config_configuration_changes(cloudtrails):
     description = "Ensure a log metric filter and alarm exist for for AWS Config configuration changes"
     scored = True
     failReason = "Ensure a log metric filter and alarm exist for for AWS Config configuration changes"
-    for m, n in cloudtrails.iteritems():
+    for m, n in cloudtrails.items():
         for o in n:
             try:
                 if o['CloudWatchLogsLogGroupArn']:
@@ -1507,7 +1520,7 @@ def control_3_10_ensure_log_metric_security_group_changes(cloudtrails):
     description = "Ensure a log metric filter and alarm exist for security group changes"
     scored = True
     failReason = "Ensure a log metric filter and alarm exist for security group changes"
-    for m, n in cloudtrails.iteritems():
+    for m, n in cloudtrails.items():
         for o in n:
             try:
                 if o['CloudWatchLogsLogGroupArn']:
@@ -1550,7 +1563,7 @@ def control_3_11_ensure_log_metric_nacl(cloudtrails):
     description = "Ensure a log metric filter and alarm exist for changes to Network Access Control Lists (NACL)"
     scored = True
     failReason = "Ensure a log metric filter and alarm exist for changes to Network Access Control Lists (NACL)"
-    for m, n in cloudtrails.iteritems():
+    for m, n in cloudtrails.items():
         for o in n:
             try:
                 if o['CloudWatchLogsLogGroupArn']:
@@ -1593,7 +1606,7 @@ def control_3_12_ensure_log_metric_changes_to_network_gateways(cloudtrails):
     description = "Ensure a log metric filter and alarm exist for changes to network gateways"
     scored = True
     failReason = "Ensure a log metric filter and alarm exist for changes to network gateways"
-    for m, n in cloudtrails.iteritems():
+    for m, n in cloudtrails.items():
         for o in n:
             try:
                 if o['CloudWatchLogsLogGroupArn']:
@@ -1636,7 +1649,7 @@ def control_3_13_ensure_log_metric_changes_to_route_tables(cloudtrails):
     description = "Ensure a log metric filter and alarm exist for route table changes"
     scored = True
     failReason = "Ensure a log metric filter and alarm exist for route table changes"
-    for m, n in cloudtrails.iteritems():
+    for m, n in cloudtrails.items():
         for o in n:
             try:
                 if o['CloudWatchLogsLogGroupArn']:
@@ -1679,7 +1692,7 @@ def control_3_14_ensure_log_metric_changes_to_vpc(cloudtrails):
     description = "Ensure a log metric filter and alarm exist for VPC changes"
     scored = True
     failReason = "Ensure a log metric filter and alarm exist for VPC changes"
-    for m, n in cloudtrails.iteritems():
+    for m, n in cloudtrails.items():
         for o in n:
             try:
                 if o['CloudWatchLogsLogGroupArn']:
@@ -1943,7 +1956,7 @@ def get_cred_report():
         return status
     response = IAM_CLIENT.get_credential_report()
     report = []
-    reader = csv.DictReader(response['Content'].splitlines(), delimiter=',')
+    reader = csv.DictReader(response['Content'].decode('utf-8').splitlines(), delimiter=',')
     for row in reader:
         report.append(row)
 
@@ -2135,7 +2148,7 @@ def s3report(htmlReport, account):
         reportName = "cis_report.html"
     with tempfile.NamedTemporaryFile(delete=False) as f:
         for item in htmlReport:
-            f.write(item)
+            f.write(bytes(item, "utf-8"))
             f.flush()
         try:
             f.close()
@@ -2152,6 +2165,46 @@ def s3report(htmlReport, account):
         },
         ExpiresIn=ttl)
     return signedURL
+
+def s3jsonreport(controlResult, account):
+    """Summary
+
+    Args:
+        jsonreport (TYPE): Description
+
+    Returns:
+        TYPE: Description
+    """
+    inner = dict()
+    outer = dict()
+    for m in range(len(controlResult)):
+        inner = dict()
+        for n in range(len(controlResult[m])):
+            x = int(controlResult[m][n]['ControlId'].split('.')[1])
+            inner[x] = controlResult[m][n]
+        y = controlResult[m][0]['ControlId'].split('.')[0]
+        outer[y] = inner
+
+    reportName = "cis_report_" + str(account) + "_" + str(datetime.now().strftime('%Y%m%d_%H%M')) + ".json"
+    with tempfile.NamedTemporaryFile(delete=False) as f:
+            f.write(bytes(json.dumps(outer, sort_keys=True, indent=4, separators=(',', ': ')), "utf-8"))
+            f.flush()
+    try:
+        f.close()
+        S3_CLIENT.upload_file(f.name, S3_JSON_REPORT_BUCKET, reportName)
+        os.unlink(f.name)
+    except Exception as e:
+        return "Failed to upload json report to S3 because: " + str(e)
+    ttl = int(S3_JSON_REPORT_EXPIRE) * 60
+    signedURL = S3_CLIENT.generate_presigned_url(
+        'get_object',
+        Params={
+            'Bucket': S3_JSON_REPORT_BUCKET,
+            'Key': reportName
+        },
+        ExpiresIn=ttl)
+    return signedURL
+
 
 
 def json_output(controlResult):
@@ -2346,6 +2399,13 @@ def lambda_handler(event, context):
             print("SignedURL:\n" + signedURL)
         if SEND_REPORT_URL_TO_SNS is True:
             send_results_to_sns(signedURL)
+
+    # Create JSON report file if enabled
+    if S3_JSON_REPORT:
+        signedURL = s3jsonreport(controls, accountNumber)
+        if SEND_REPORT_URL_TO_SNS is True:
+            send_results_to_sns(signedURL)
+
 
     # Report back to Config if we detected that the script is initiated from Config Rules
     if configRule:
