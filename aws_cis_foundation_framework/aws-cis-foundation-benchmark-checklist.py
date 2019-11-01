@@ -2139,7 +2139,7 @@ def s3report(htmlReport, account):
             f.flush()
         try:
             f.close()
-            S3_CLIENT.upload_file(f.name, S3_WEB_REPORT_BUCKET, reportName)
+            S3_CLIENT.upload_file(f.name, S3_WEB_REPORT_BUCKET, reportName, {'ContentType': "text/html"})
             os.unlink(f.name)
         except Exception as e:
             return "Failed to upload report to S3 because: " + str(e)
