@@ -738,7 +738,7 @@ def control_1_23_no_active_initial_access_keys_with_iam_user(credreport):
     scored = False
     offenders = []
     for n, _ in enumerate(credreport):
-        if (credreport[n]['access_key_1_active'] or credreport[n]['access_key_2_active'] == 'true') and n > 0:
+        if (credreport[n]['access_key_1_active'] or credreport[n]['access_key_2_active'] == 'true') and n > 0 and credreport[n]['password_enabled'] == 'true':
             response = IAM_CLIENT.list_access_keys(
                 UserName=str(credreport[n]['user'])
             )
