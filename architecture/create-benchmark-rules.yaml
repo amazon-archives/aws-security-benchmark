@@ -332,7 +332,7 @@
           SourceDetails:
             -
               EventSource: aws.config
-              MessageType: ConfigurationItemChangeNotification
+              MessageType: ScheduledNotification
           SourceIdentifier: !GetAtt FunctionForEvaluateRootAccountRule.Arn
 
     ConfigRuleForRequiredTags:
@@ -987,7 +987,7 @@
           SourceDetails:
             -
               EventSource: aws.config
-              MessageType: ConfigurationItemChangeNotification
+              MessageType: ScheduledNotification
           SourceIdentifier: !GetAtt FunctionForEvaluateCloudTrailRule.Arn
 
     #==================================================
@@ -1103,7 +1103,7 @@
           SourceDetails:
             -
               EventSource: aws.config
-              MessageType: ConfigurationItemChangeNotification
+              MessageType: ScheduledNotification
           SourceIdentifier: !GetAtt FunctionForEvaluateCloudTrailBucketRule.Arn
 
     #==================================================
@@ -1201,7 +1201,7 @@
           SourceDetails:
             -
               EventSource: aws.config
-              MessageType: ConfigurationItemChangeNotification
+              MessageType: ScheduledNotification
           SourceIdentifier: !GetAtt FunctionForEvaluateCloudTrailLogIntegrityRule.Arn
 
     #==================================================
@@ -1381,9 +1381,6 @@
           SourceDetails:
             -
               EventSource: aws.config
-              MessageType: ConfigurationItemChangeNotification
-            -
-              EventSource: aws.config
               MessageType: ScheduledNotification
 
     #==================================================
@@ -1483,9 +1480,6 @@
         Source:
           Owner: CUSTOM_LAMBDA
           SourceDetails:
-            -
-              EventSource: aws.config
-              MessageType: ConfigurationItemChangeNotification
             -
               EventSource: aws.config
               MessageType: ScheduledNotification
