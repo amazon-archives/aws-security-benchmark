@@ -1,11 +1,11 @@
 # aws-security-benchmark
 ```create-benchmark-rules.yaml``` is an AWS CloudFormation template for establishing CIS AWS 1.1 benchmark governance rules (download the benchmarks [here](https://benchmarks.cisecurity.org/en-us/?route=downloads.form.awsfoundations.110)).
 
-```cis-benchmark-matrix.xlsx``` is a spreadsheet that maps the CIS Amazon Web Services Foundations benchmarks to the specific security controls provisioned in the CloudFormation template.
+```cis-benchmark-matrix.md``` is a matrix that maps the CIS Amazon Web Services Foundations benchmarks to the specific security controls provisioned in the CloudFormation template.
 
 The AWS services used for these benchmarks are used in the following relationship:
 
-![CIS Benchmark Architecture Diagram](https://github.com/awslabs/aws-security-benchmark/blob/master/architecture/assets/cis-benchmark-architecture.jpg)
+![CIS Benchmark Architecture Diagram](assets/cis-benchmark-architecture.jpg)
 
 The following preconditions must be met before the stack can be launched:
 
