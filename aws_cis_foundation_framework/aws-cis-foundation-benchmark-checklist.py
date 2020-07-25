@@ -1230,6 +1230,7 @@ def control_3_3_ensure_log_metric_filter_root_usage(cloudtrails):
                             )
                             if not len(subscribers['Subscriptions']) == 0:
                                 result = True
+                                failReason = ""
             except:
                 pass
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
@@ -1273,6 +1274,7 @@ def control_3_4_ensure_log_metric_iam_policy_change(cloudtrails):
                             )
                             if not len(subscribers['Subscriptions']) == 0:
                                 result = True
+                                failReason = ""
             except:
                 pass
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
@@ -1316,6 +1318,7 @@ def control_3_5_ensure_log_metric_cloudtrail_configuration_changes(cloudtrails):
                             )
                             if not len(subscribers['Subscriptions']) == 0:
                                 result = True
+                                failReason = ""
             except:
                 pass
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
@@ -1359,6 +1362,7 @@ def control_3_6_ensure_log_metric_console_auth_failures(cloudtrails):
                             )
                             if not len(subscribers['Subscriptions']) == 0:
                                 result = True
+                                failReason = ""
             except:
                 pass
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
@@ -1402,6 +1406,7 @@ def control_3_7_ensure_log_metric_disabling_scheduled_delete_of_kms_cmk(cloudtra
                             )
                             if not len(subscribers['Subscriptions']) == 0:
                                 result = True
+                                failReason = ""
             except:
                 pass
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
@@ -1445,6 +1450,7 @@ def control_3_8_ensure_log_metric_s3_bucket_policy_changes(cloudtrails):
                             )
                             if not len(subscribers['Subscriptions']) == 0:
                                 result = True
+                                failReason = ""
             except:
                 pass
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
@@ -1488,6 +1494,7 @@ def control_3_9_ensure_log_metric_config_configuration_changes(cloudtrails):
                             )
                             if not len(subscribers['Subscriptions']) == 0:
                                 result = True
+                                failReason = ""
             except:
                 pass
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
@@ -1531,6 +1538,7 @@ def control_3_10_ensure_log_metric_security_group_changes(cloudtrails):
                             )
                             if not len(subscribers['Subscriptions']) == 0:
                                 result = True
+                                failReason = ""
             except:
                 pass
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
@@ -1574,6 +1582,7 @@ def control_3_11_ensure_log_metric_nacl(cloudtrails):
                             )
                             if not len(subscribers['Subscriptions']) == 0:
                                 result = True
+                                failReason = ""
             except:
                 pass
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
@@ -1617,6 +1626,7 @@ def control_3_12_ensure_log_metric_changes_to_network_gateways(cloudtrails):
                             )
                             if not len(subscribers['Subscriptions']) == 0:
                                 result = True
+                                failReason = ""
             except:
                 pass
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
@@ -1660,6 +1670,7 @@ def control_3_13_ensure_log_metric_changes_to_route_tables(cloudtrails):
                             )
                             if not len(subscribers['Subscriptions']) == 0:
                                 result = True
+                                failReason = ""
             except:
                 pass
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
@@ -1703,6 +1714,7 @@ def control_3_14_ensure_log_metric_changes_to_vpc(cloudtrails):
                             )
                             if not len(subscribers['Subscriptions']) == 0:
                                 result = True
+                                failReason = ""
             except:
                 pass
     return {'Result': result, 'failReason': failReason, 'Offenders': offenders, 'ScoredControl': scored, 'Description': description, 'ControlId': control}
